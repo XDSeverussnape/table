@@ -8,42 +8,6 @@ const someText = "Some beautiful text"
 const testText =
   "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dicta, obcaecati! Temporibus, dicta quidem? Nobis sunt qui impedit corporis voluptas voluptate optio mollitia quis laudantium pariatur iste nemo, tenetur, minima fugiat modi, iure dolorum unde. Deleniti iste suscipit rem repellat ipsum amet similique quos recusandae enim eos aliquam doloremque, accusamus, in reprehenderit veniam blanditiis temporibus! Eius natus aspernatur deleniti illum vitae atque laudantium eligendi fugiat porro commodi. Minima, dolor, facere dolore iure libero, fuga dolores consectetur quidem officiis accusantium exercitationem ab odio. Veniam quo excepturi non, fugiat nisi voluptates velit quisquam omnis? Ea fugiat reiciendis nesciunt voluptas! Vel ea eum eveniet?"
 
-const data = [
-  {
-    id: Math.random(),
-    test1: someText,
-    test2: someText,
-    test3: someText,
-    test4: someText,
-    test5: testText,
-    test6: someText,
-    test7: someText,
-    test8: someText,
-  },
-  {
-    id: Math.random(),
-    test1: someText,
-    test2: testText,
-    test3: someText,
-    test4: someText,
-    test5: someText,
-    test6: someText,
-    test7: someText,
-    test8: someText,
-  },
-  {
-    id: Math.random(),
-    test1: someText,
-    test2: someText,
-    test3: someText,
-    test4: someText,
-    test5: someText,
-    test6: someText,
-    test7: someText,
-    test8: testText,
-  },
-]
-
 ReactDOM.render(
   <div
     style={{
@@ -56,7 +20,17 @@ ReactDOM.render(
     <Table
       onRowClick={() => console.log("48")}
       title="Test"
-      data={data}
+      data={Array.from({ length: 10000 }).map((el, i) => ({
+        id: Math.random(),
+        test1: someText,
+        test2: someText,
+        test3: someText,
+        test4: someText,
+        test5: i === 2 || i === 10 ? testText : someText,
+        test6: someText,
+        test7: someText,
+        test8: someText,
+      }))}
       columns={[
         { label: "test1", dataKey: "test1" },
         { label: "test2", dataKey: "test2" },
