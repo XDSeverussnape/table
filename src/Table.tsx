@@ -6,11 +6,11 @@ import React, {
   useRef,
   useState,
   useMemo,
-} from "react";
-import clsx from "clsx";
-import { createStyles, darken, Theme } from "@material-ui/core/styles";
-import TableCell from "@material-ui/core/TableCell";
-import Paper from "@material-ui/core/Paper";
+} from "react"
+import clsx from "clsx"
+import { createStyles, darken, Theme } from "@material-ui/core/styles"
+import TableCell from "@material-ui/core/TableCell"
+import Paper from "@material-ui/core/Paper"
 import {
   AutoSizer,
   CellMeasurer,
@@ -20,8 +20,8 @@ import {
   Table as VTable,
   TableCellDataGetter,
   TableHeaderProps,
-} from "react-virtualized";
-import TablePagination from "@material-ui/core/TablePagination";
+} from "react-virtualized"
+import TablePagination from "@material-ui/core/TablePagination"
 import {
   Checkbox,
   IconButton,
@@ -34,111 +34,111 @@ import {
   Toolbar,
   Tooltip,
   Typography,
-} from "@material-ui/core";
-import AddIcon from "@material-ui/icons/Add";
-import DeleteIcon from "@material-ui/icons/Delete";
-import EditIcon from "@material-ui/icons/Edit";
-import CheckIcon from "@material-ui/icons/Check";
-import ClearIcon from "@material-ui/icons/Clear";
+} from "@material-ui/core"
+import AddIcon from "@material-ui/icons/Add"
+import DeleteIcon from "@material-ui/icons/Delete"
+import EditIcon from "@material-ui/icons/Edit"
+import CheckIcon from "@material-ui/icons/Check"
+import ClearIcon from "@material-ui/icons/Clear"
 import {
   TableCellProps,
   TableHeaderRowProps,
   TableRowProps,
-} from "react-virtualized/dist/es/Table";
-import ChevronRightIcon from "@material-ui/icons/ChevronRight";
-import { debounce, orderBy } from "lodash";
-import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
-import SaveAltIcon from "@material-ui/icons/SaveAlt";
-import { CsvBuilder } from "filefy";
-import { jsPDF } from "jspdf";
-import InputAdornment from "@material-ui/core/InputAdornment";
-import FilterListIcon from "@material-ui/icons/FilterList";
+} from "react-virtualized/dist/es/Table"
+import ChevronRightIcon from "@material-ui/icons/ChevronRight"
+import { debounce, orderBy } from "lodash"
+import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward"
+import SaveAltIcon from "@material-ui/icons/SaveAlt"
+import { CsvBuilder } from "filefy"
+import { jsPDF } from "jspdf"
+import InputAdornment from "@material-ui/core/InputAdornment"
+import FilterListIcon from "@material-ui/icons/FilterList"
+import { CellPosition } from "react-virtualized/dist/es/CellMeasurer"
 
 const compareValue = (data: any, filterString: any, index: any) => {
-  const filter = filterString.toLowerCase();
-  const _filter = filter[filter.length - 1];
-  let newData: any = [];
+  const filter = filterString.toLowerCase()
+  const _filter = filter[filter.length - 1]
+  let newData: any = []
   data.forEach((el: any) => {
     const value = index.getter
       ? index.getter(el).toLowerCase()
-      : String(el[index.key]).toLowerCase();
-    console.log(value, filter);
-    const pureFilter = filter.replace(/\*/g, "");
+      : String(el[index.key]).toLowerCase()
+    const pureFilter = filter.replace(/\*/g, "")
     const reversePureFilter = filter
       .replace(/\*/g, "")
       .split("")
       .reverse()
-      .join("");
-    const numberFilter = Number(filter.replace(">", "").replace("<", ""));
+      .join("")
+    const numberFilter = Number(filter.replace(">", "").replace("<", ""))
     if (filter === "*" || filter === ">" || filter === "<") {
-      newData = data;
+      newData = data
     } else {
-      const reverseValue = value.split("").reverse().join("");
+      const reverseValue = value.split("").reverse().join("")
       if (filter[0] === "*" && _filter === "*") {
-        value.includes(pureFilter) && newData.push(el);
+        value.includes(pureFilter) && newData.push(el)
       }
       if (_filter === "*" && filter[0] !== "*") {
-        value.startsWith(pureFilter) && newData.push(el);
+        value.startsWith(pureFilter) && newData.push(el)
       }
       if (filter[0] === "*" && _filter !== "*") {
-        reverseValue.startsWith(reversePureFilter) && newData.push(el);
+        reverseValue.startsWith(reversePureFilter) && newData.push(el)
       }
 
       if (filter[0] === ">") {
-        Number(value) > numberFilter && newData.push(el);
+        Number(value) > numberFilter && newData.push(el)
       }
       if (filter[0] === "<") {
-        Number(value) < numberFilter && newData.push(el);
+        Number(value) < numberFilter && newData.push(el)
       }
-      value === pureFilter && newData.push(el);
+      value === pureFilter && newData.push(el)
     }
-  });
-  return newData;
-};
+  })
+  return newData
+}
 const filterData = (data: any, filters: any, filterIndex: any) => {
-  let tempData: any = [];
+  let tempData: any = []
   filters.forEach((filter: any, index: any) => {
-    const re = /\s*(?:,|$)\s*/;
+    const re = /\s*(?:,|$)\s*/
     if (filter === "") {
-      return data;
+      return data
     } else {
       if (filter.includes(",")) {
-        tempData = [];
+        tempData = []
         const filterArray = filter
           .trim()
           .split(re)
-          .filter((e: any) => e);
+          .filter((e: any) => e)
 
         filterArray.forEach((element: any) => {
           tempData = tempData.concat(
-            compareValue(data, element, filterIndex[index])
-          );
-        });
+            compareValue(data, element, filterIndex[index]),
+          )
+        })
         if (tempData.length > 0) {
           data = [
             ...new Map(tempData.map((item: any) => [item.id, item])).values(),
-          ];
+          ]
         } else {
-          data = tempData;
+          data = tempData
         }
 
-        return data;
+        return data
       } else {
         data = [
           ...new Map(
             compareValue(data, filter, filterIndex[index]).map((item: any) => [
               item.id,
               item,
-            ])
+            ]),
           ).values(),
-        ];
+        ]
 
-        return data;
+        return data
       }
     }
-  });
-  return data;
-};
+  })
+  return data
+}
 
 declare module "@material-ui/core/styles/withStyles" {
   // Augment the BaseCSSProperties so that we can control jss-rtl
@@ -146,7 +146,7 @@ declare module "@material-ui/core/styles/withStyles" {
     /*
      * Used to control if the rule-set should be affected by rtl transformation
      */
-    flip?: boolean;
+    flip?: boolean
   }
 }
 
@@ -207,8 +207,8 @@ const useStyles = makeStyles((theme: Theme) =>
     noClick: {
       cursor: "initial",
     },
-  })
-);
+  }),
+)
 
 const useToolbarStyles = makeStyles((theme: Theme) => ({
   root: {
@@ -226,52 +226,56 @@ const useToolbarStyles = makeStyles((theme: Theme) => ({
   title: {
     flex: "1 1 100%",
   },
-}));
+}))
 
 interface IAction {
-  icon: typeof React.Component;
-  tooltip: string;
+  icon: typeof React.Component
+  tooltip: string
   onClick: (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-    data: any
-  ) => void;
+    data: any,
+  ) => void
 }
 
 interface ITooltipProps {
-  data: Array<any>;
-  actions: Array<(data: any[]) => JSX.Element | IAction>;
-  numSelected: number;
-  isAdd?: () => void | undefined;
-  exportFile?: boolean;
-  exportFileName?: string;
-  title: string | HTMLElement | Element | JSX.Element | undefined;
-  columns: any;
-  rows: any;
-  checkedItems?: Array<number>;
-  check?: Check;
-  setCheckedItems?: (checkedItems: Array<number>) => void;
-  allRecord: number;
+  data: Array<any>
+  actions: Array<(data: any[]) => JSX.Element | IAction>
+  numSelected: number
+  isAdd?: () => void | undefined
+  exportFile?: boolean
+  exportFileName?: string
+  title: string | HTMLElement | Element | JSX.Element | undefined
+  columns: any
+  rows: any
+  checkedItems?: Array<number>
+  check?: Check
+  setCheckedItems?: (checkedItems: Array<number>) => void
+  allRecord: number
 }
 
 const EnhancedTableToolbar = (props: ITooltipProps) => {
-  const classes = useToolbarStyles();
-  const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(
-    null
-  );
-  const open = Boolean(anchorEl);
+  const classes = useToolbarStyles()
+  const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null)
+  const open = Boolean(anchorEl)
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
+    setAnchorEl(event.currentTarget)
+  }
 
   const handleClose = () => {
-    setAnchorEl(null);
-  };
-  const { numSelected, columns, rows, exportFileName, checkedItems, check } =
-    props;
+    setAnchorEl(null)
+  }
+  const {
+    numSelected,
+    columns,
+    rows,
+    exportFileName,
+    checkedItems,
+    check,
+  } = props
 
-  const pdf = new jsPDF("portrait", "pt", "A4").setFontSize(12) as any;
-  const showCheckIcon = checkedItems ? checkedItems.length === 0 : true;
+  const pdf = new jsPDF("portrait", "pt", "A4").setFontSize(12) as any
+  const showCheckIcon = checkedItems ? checkedItems.length === 0 : true
   return (
     <Toolbar
       className={clsx(classes.root, {
@@ -333,16 +337,16 @@ const EnhancedTableToolbar = (props: ITooltipProps) => {
           {props.actions &&
             props.actions.map((action) => {
               if (typeof action === "function") {
-                return action(props.data);
+                return action(props.data)
               } else {
-                const { icon: Icon, tooltip, onClick }: IAction = action;
+                const { icon: Icon, tooltip, onClick }: IAction = action
                 return (
                   <Tooltip key={String(tooltip)} title={tooltip}>
                     <IconButton onClick={(e) => onClick(e, props.data)}>
                       <Icon />
                     </IconButton>
                   </Tooltip>
-                );
+                )
               }
             })}
           {check && checkedItems!?.length > 0 && (
@@ -350,8 +354,8 @@ const EnhancedTableToolbar = (props: ITooltipProps) => {
               <IconButton
                 onClick={(e) => {
                   if (window.confirm("Napewno?")) {
-                    check.onClick(checkedItems!);
-                    props.setCheckedItems!([]);
+                    check.onClick(checkedItems!)
+                    props.setCheckedItems!([])
                   }
                 }}
               >
@@ -380,13 +384,13 @@ const EnhancedTableToolbar = (props: ITooltipProps) => {
                 <MenuItem
                   onClick={() => {
                     new CsvBuilder(
-                      exportFileName ? `${exportFileName}.csv` : "WIP_CSV.csv"
+                      exportFileName ? `${exportFileName}.csv` : "WIP_CSV.csv",
                     )
                       .setDelimeter(";")
                       .setColumns(columns)
                       .addRows(rows)
-                      .exportFile();
-                    handleClose();
+                      .exportFile()
+                    handleClose()
                   }}
                 >
                   Export to CSV
@@ -396,9 +400,11 @@ const EnhancedTableToolbar = (props: ITooltipProps) => {
                     pdf
                       .autoTable(columns, rows)
                       .save(
-                        exportFileName ? `${exportFileName}.pdf` : "WIP_PDF.pdf"
-                      );
-                    handleClose();
+                        exportFileName
+                          ? `${exportFileName}.pdf`
+                          : "WIP_PDF.pdf",
+                      )
+                    handleClose()
                   }}
                 >
                   Export to PDF
@@ -416,66 +422,64 @@ const EnhancedTableToolbar = (props: ITooltipProps) => {
         </div>
       </div>
     </Toolbar>
-  );
-};
+  )
+}
 
 interface ColumnData {
-  dataKey: string;
-  label: string;
-  checked?: boolean;
-  columnData?: any;
-  disableSort?: boolean;
-  initialColumnValue?: any;
-  cellDataGetter?: TableCellDataGetter;
-  editComponent?: (props: any) => JSX.Element;
-  isFilterable?: boolean;
-  width?: number;
-  numeric?: boolean;
-  filterDataCell?: (row: any) => string | number;
+  dataKey: string
+  label: string
+  checked?: boolean
+  columnData?: any
+  disableSort?: boolean
+  initialColumnValue?: any
+  cellDataGetter?: TableCellDataGetter
+  editComponent?: (props: any) => JSX.Element
+  isFilterable?: boolean
+  width?: number
+  numeric?: boolean
+  filterDataCell?: (row: any) => string | number
 }
 
 interface Row {
-  index: number;
+  index: number
 }
 
 interface ClickData {
-  event: SyntheticEvent;
-  index: number;
-  rowData: any;
+  event: SyntheticEvent
+  index: number
+  rowData: any
 }
 
-let rowParent: any;
-
 interface Check {
-  icon: () => JSX.Element;
-  onClick: (checkedItems: Array<number>) => void;
-  tooltip: string;
+  icon: () => JSX.Element
+  onClick: (checkedItems: Array<number>) => void
+  tooltip: string
 }
 
 interface MuiVirtualizedTableProps<T> {
-  columns: ColumnData[];
-  data: T[];
-  headerHeight?: number;
-  onRowClick?: (data: ClickData) => void;
-  rowCount?: number;
-  rowGetter?: (row: Row) => void;
-  rowHeight?: number;
-  title?: string;
-  check?: Check;
-  edit?: (data: T) => void;
-  add?: (data: T) => void;
-  remove?: (data: T) => void;
-  actions?: Array<(data: any[]) => JSX.Element | IAction>;
-  isPagination?: boolean;
-  detailPanel?: (data: any) => ReactNode;
-  exportFile?: boolean;
-  exportFileName?: string;
+  columns: ColumnData[]
+  data: T[]
+  headerHeight?: number
+  onRowClick?: (data: ClickData) => void
+  rowCount?: number
+  rowGetter?: (row: Row) => void
+  rowHeight?: number
+  title?: string
+  check?: Check
+  edit?: (data: T) => void
+  add?: (data: T) => void
+  remove?: (data: T) => void
+  actions?: Array<(data: any[]) => JSX.Element | IAction>
+  isPagination?: boolean
+  detailPanel?: (data: any) => ReactNode
+  exportFile?: boolean
+  exportFileName?: string
 }
 
 function MuiVirtualizedTable<T extends unknown>(
-  props: MuiVirtualizedTableProps<T>
+  props: MuiVirtualizedTableProps<T>,
 ) {
-  const classes = useStyles();
+  const classes = useStyles()
   const {
     columns,
     rowHeight,
@@ -491,40 +495,49 @@ function MuiVirtualizedTable<T extends unknown>(
     title,
     exportFile,
     exportFileName,
-  } = props;
-  const tableRef: LegacyRef<VTable> | undefined = useRef<any>();
+  } = props
+  const tableRef: LegacyRef<VTable> | undefined = useRef<any>()
   const newEditElement = props.columns.reduce((acc, val) => {
     acc[val.dataKey] =
       undefined !== val.initialColumnValue
         ? val.initialColumnValue
         : val.numeric
         ? 0
-        : "";
-    return acc;
-  }, {} as any);
-  const [checkedItems, setCheckedItems] = useState<any[]>([]);
-  const [rowIndex, setRowIndex] = useState<number | boolean>(false);
-  const [addElement, setAddElement] = useState<boolean>(false);
+        : ""
+    return acc
+  }, {} as any)
+  const [checkedItems, setCheckedItems] = useState<any[]>([])
+  const [rowIndex, setRowIndex] = useState<number | boolean>(false)
+  const [addElement, setAddElement] = useState<boolean>(false)
   const [editRow, setEditRow] = useState<any>({
     id: "editRow",
     ...newEditElement,
-  });
-  const [detailRows, setDetailRows] = useState<Array<number>>([]);
+  })
+  const [detailRows, setDetailRows] = useState<Array<number>>([])
   const [filters, setFilters] = useState<Array<string>>(() =>
-    columns.map((_) => "")
-  );
+    columns.map((_) => ""),
+  )
   const [sortOption, setSortOption] = useState<{
-    sortDirection: undefined | SortDirectionType;
-    sortBy: undefined | string;
-  }>({ sortDirection: undefined, sortBy: undefined });
+    sortDirection: undefined | SortDirectionType
+    sortBy: undefined | string
+  }>({ sortDirection: undefined, sortBy: undefined })
 
+  const rowCache = new CellMeasurerCache({
+    fixedWidth: true,
+    defaultHeight: 48,
+    minHeight: 48,
+  })
+
+  let rowParent: any = null // let a cellRenderer supply a usable value
+
+  console.log(rowCache)
   let tableData = filterData(
     data,
     filters,
-    columns.map((_) => ({ key: _.dataKey, getter: _.filterDataCell }))
-  );
+    columns.map((_) => ({ key: _.dataKey, getter: _.filterDataCell })),
+  )
 
-  if (addElement) tableData = [editRow, ...tableData];
+  if (addElement) tableData = [editRow, ...tableData]
 
   tableData = orderBy(
     tableData,
@@ -532,17 +545,17 @@ function MuiVirtualizedTable<T extends unknown>(
     [
       undefined !== sortOption.sortDirection &&
         (sortOption.sortDirection.toLowerCase() as any),
-    ]
-  );
+    ],
+  )
 
-  const isFilterable = columns.some((el: any) => el.isFilterable);
+  const isFilterable = columns.some((el: any) => el.isFilterable)
 
   const cellRenderer = (
     params: TableCellProps & {
-      editComponent?: (props: any) => JSX.Element;
-      numeric?: boolean;
-      filterDataCell?: (row: T) => string | number | boolean;
-    }
+      editComponent?: (props: any) => JSX.Element
+      numeric?: boolean
+      filterDataCell?: (row: T) => string | number | boolean
+    },
   ) => {
     const {
       cellData,
@@ -553,109 +566,149 @@ function MuiVirtualizedTable<T extends unknown>(
       parent,
       rowIndex,
       numeric,
-    } = params;
-    const { columns, rowHeight, onRowClick, check, detailPanel } = props;
-    rowParent = parent;
+    } = params
+    const { columns, rowHeight, onRowClick, check, detailPanel } = props
+    rowParent = parent
 
     return (
-      <TableCell
-        component="div"
-        {...(dataKey === "check" && { onClick: (e) => e.stopPropagation() })}
-        {...(dataKey === "edit" && { onClick: (e) => e.stopPropagation() })}
-        {...(dataKey === "remove" && { onClick: (e) => e.stopPropagation() })}
-        {...(dataKey === "detail" && { onClick: (e) => e.stopPropagation() })}
-        {...(rowData.id === editRow.id && {
-          onClick: (e) => e.stopPropagation(),
-        })}
-        className={clsx(classes.tableCell, classes.flexContainer, {
-          [classes.noClick]: onRowClick == null,
-          [classes.firstCellElement]:
-            columnIndex === (check ? (detailPanel ? 2 : 1) : 0),
-          [classes.lastCellElement]:
-            columnIndex === columns.length - (check ? 0 : 1),
-        })}
-        variant="body"
-        style={{
-          height: rowHeight ? rowHeight : 48,
-          ...(dataKey === "check" && { justifyContent: "center" }),
-        }}
-        align={
-          columnIndex !== (check ? (detailPanel ? 2 : 1) : 0) ? "right" : "left"
-        }
+      <CellMeasurer
+        cache={rowCache}
+        columnIndex={columnIndex}
+        parent={parent}
+        rowIndex={rowIndex}
       >
-        {editRow.id === rowData.id &&
-        dataKey !== "check" &&
-        dataKey !== "edit" &&
-        dataKey !== "remove" &&
-        editRow.tableMode !== "REMOVE" ? (
-          editComponent ? (
-            editComponent({
-              value: editRow[dataKey],
-              setNewValue: (data: any, key?: string) =>
-                setEditRow((prev: any) => ({
-                  ...prev,
-                  [key ? key : dataKey]: data,
-                })),
-              data: rowData,
-            })
-          ) : (
-            <TextField
-              fullWidth
-              type={numeric ? "number" : "text"}
-              value={editRow[dataKey]}
-              onChange={(e) =>
-                setEditRow((prev: any) => ({
-                  ...prev,
-                  [dataKey]: numeric ? Number(e.target.value) : e.target.value,
-                }))
-              }
-            />
-          )
-        ) : detailPanel && dataKey === "detail" ? (
-          <IconButton
-            disableRipple
-            onClick={() => {
-              if (detailRows.includes(rowIndex)) {
-                rowCache.set(rowIndex, 0, rowCache.getWidth(rowIndex, 0), 48);
-                null !== tableRef.current &&
-                  tableRef.current &&
-                  tableRef.current.recomputeRowHeights(rowIndex);
-                //null !== tableRef.current && tableRef.current && tableRef.current.forceUpdate()
-                setDetailRows((prev) => prev.filter((el) => el !== rowIndex));
-              } else {
-                rowCache.set(rowIndex, 0, rowCache.getWidth(rowIndex, 0), 300);
-                null !== tableRef.current &&
-                  tableRef.current &&
-                  tableRef.current.recomputeRowHeights(rowIndex);
-                //null !== tableRef.current && tableRef.current && tableRef.current.forceUpdate()
-                setDetailRows((prev) => prev.concat(rowIndex));
-              }
-            }}
-          >
-            <ChevronRightIcon
+        {(measurerParams) => {
+          console.log(measurerParams)
+          return (
+            <TableCell
+              ref={measurerParams.registerChild}
+              onLoad={measurerParams.measure}
+              component="div"
+              {...(dataKey === "check" && {
+                onClick: (e) => e.stopPropagation(),
+              })}
+              {...(dataKey === "edit" && {
+                onClick: (e) => e.stopPropagation(),
+              })}
+              {...(dataKey === "remove" && {
+                onClick: (e) => e.stopPropagation(),
+              })}
+              {...(dataKey === "detail" && {
+                onClick: (e) => e.stopPropagation(),
+              })}
+              {...(rowData.id === editRow.id && {
+                onClick: (e) => e.stopPropagation(),
+              })}
+              className={clsx(classes.tableCell, classes.flexContainer, {
+                [classes.noClick]: onRowClick == null,
+                [classes.firstCellElement]:
+                  columnIndex === (check ? (detailPanel ? 2 : 1) : 0),
+                [classes.lastCellElement]:
+                  columnIndex === columns.length - (check ? 0 : 1),
+              })}
+              variant="body"
               style={{
-                transform: detailRows.includes(rowIndex)
-                  ? "rotate(90deg)"
-                  : "rotate(0deg)",
+                height: rowHeight
+                  ? rowHeight
+                  : rowCache.getHeight(rowIndex, columnIndex),
+                ...(dataKey === "check" && { justifyContent: "center" }),
               }}
-            />
-          </IconButton>
-        ) : (
-          cellData
-        )}
-      </TableCell>
-    );
-  };
+              align={
+                columnIndex !== (check ? (detailPanel ? 2 : 1) : 0)
+                  ? "right"
+                  : "left"
+              }
+            >
+              {editRow.id === rowData.id &&
+              dataKey !== "check" &&
+              dataKey !== "edit" &&
+              dataKey !== "remove" &&
+              editRow.tableMode !== "REMOVE" ? (
+                editComponent ? (
+                  editComponent({
+                    value: editRow[dataKey],
+                    setNewValue: (data: any, key?: string) =>
+                      setEditRow((prev: any) => ({
+                        ...prev,
+                        [key ? key : dataKey]: data,
+                      })),
+                    data: rowData,
+                  })
+                ) : (
+                  <TextField
+                    fullWidth
+                    type={numeric ? "number" : "text"}
+                    value={editRow[dataKey]}
+                    onChange={(e) =>
+                      setEditRow((prev: any) => ({
+                        ...prev,
+                        [dataKey]: numeric
+                          ? Number(e.target.value)
+                          : e.target.value,
+                      }))
+                    }
+                  />
+                )
+              ) : detailPanel && dataKey === "detail" ? (
+                <IconButton
+                  disableRipple
+                  onClick={() => {
+                    if (detailRows.includes(rowIndex)) {
+                      rowCache.set(
+                        rowIndex,
+                        0,
+                        rowCache.getWidth(rowIndex, 0),
+                        48,
+                      )
+                      null !== tableRef.current &&
+                        tableRef.current &&
+                        tableRef.current.recomputeRowHeights(rowIndex)
+                      //null !== tableRef.current && tableRef.current && tableRef.current.forceUpdate()
+                      setDetailRows((prev) =>
+                        prev.filter((el) => el !== rowIndex),
+                      )
+                    } else {
+                      rowCache.set(
+                        rowIndex,
+                        0,
+                        rowCache.getWidth(rowIndex, 0),
+                        300,
+                      )
+                      null !== tableRef.current &&
+                        tableRef.current &&
+                        tableRef.current.recomputeRowHeights(rowIndex)
+                      setDetailRows((prev) => prev.concat(rowIndex))
+                    }
+                  }}
+                >
+                  <ChevronRightIcon
+                    style={{
+                      transform: detailRows.includes(rowIndex)
+                        ? "rotate(90deg)"
+                        : "rotate(0deg)",
+                    }}
+                  />
+                </IconButton>
+              ) : (
+                cellData
+              )}
+            </TableCell>
+          )
+        }}
+      </CellMeasurer>
+    )
+  }
 
   const rowRenderer = (params: TableRowProps) => {
-    const { detailPanel } = props;
-    const { onRowClick, rowData, index, className } = params;
+    const { detailPanel } = props
+    const { onRowClick, rowData, index, className } = params
+
     return (
       <CellMeasurer
         cache={rowCache}
         columnIndex={0}
         key={params.key}
-        parent={rowParent}
+        parent={rowParent as any}
         rowIndex={params.index}
       >
         <>
@@ -663,9 +716,9 @@ function MuiVirtualizedTable<T extends unknown>(
             onClick={(event: React.MouseEvent<HTMLTableRowElement>) => {
               if (params.onRowClick) {
                 setRowIndex(
-                  rowIndex && rowIndex === params.index ? false : params.index
-                );
-                return params.onRowClick({ rowData, index, event });
+                  rowIndex && rowIndex === params.index ? false : params.index,
+                )
+                return params.onRowClick({ rowData, index, event })
               }
             }}
             className={clsx(
@@ -675,11 +728,11 @@ function MuiVirtualizedTable<T extends unknown>(
               {
                 [classes.tableRowHover]: index !== -1 && onRowClick != null,
                 [classes.tableRowSelected]: index === rowIndex,
-              }
+              },
             )}
             component="div"
             key={params.key}
-            style={{ ...params.style, height: 48 }}
+            style={{ ...params.style, height: "max-content" }}
           >
             {params.columns}
           </TableRow>
@@ -688,8 +741,8 @@ function MuiVirtualizedTable<T extends unknown>(
               component="div"
               style={{
                 ...params.style,
-                top: params.style.top + 48,
-                height: rowCache.getHeight(index, 0) - 48,
+                // height: rowCache.getHeight(index, 0),
+                height: "max-content",
               }}
             >
               {detailPanel(rowData)}
@@ -697,21 +750,21 @@ function MuiVirtualizedTable<T extends unknown>(
           )}
         </>
       </CellMeasurer>
-    );
-  };
+    )
+  }
 
   const headerRowRenderer = (params: TableHeaderRowProps) => {
-    const { columns, headerHeight } = props;
+    const { columns, headerHeight } = props
     const handleChange = debounce(
       (value, index) =>
         setFilters((prev) => prev.map((_, i) => (i === index ? value : _))),
-      500
-    );
-    const actionColumn: ColumnData = { dataKey: "", label: "" };
-    let allColumns = [...columns];
-    if (props.check) allColumns = [actionColumn, ...allColumns];
-    if (props.add) allColumns = [...allColumns, actionColumn];
-    if (props.edit) allColumns = [...allColumns, actionColumn];
+      500,
+    )
+    const actionColumn: ColumnData = { dataKey: "", label: "" }
+    let allColumns = [...columns]
+    if (props.check) allColumns = [actionColumn, ...allColumns]
+    if (props.add) allColumns = [...allColumns, actionColumn]
+    if (props.edit) allColumns = [...allColumns, actionColumn]
 
     return (
       <>
@@ -729,7 +782,7 @@ function MuiVirtualizedTable<T extends unknown>(
                   ? i - 1
                   : props.check
                   ? i - 1
-                  : i;
+                  : i
 
               return (
                 <TableCell
@@ -743,7 +796,7 @@ function MuiVirtualizedTable<T extends unknown>(
                     {
                       [classes.firstCellElement]: index === 0,
                       [classes.lastCellElement]: i === allColumns.length - 1,
-                    }
+                    },
                   )}
                   variant="head"
                   style={{
@@ -776,7 +829,7 @@ function MuiVirtualizedTable<T extends unknown>(
                     />
                   )}
                 </TableCell>
-              );
+              )
             })}
           </TableRow>
         )}
@@ -784,6 +837,7 @@ function MuiVirtualizedTable<T extends unknown>(
           className={clsx(params.className, classes.headerRow)}
           style={{
             ...params.style,
+            width: "auto",
             display: "flex",
             height: headerHeight ? headerHeight : 48,
           }}
@@ -792,14 +846,14 @@ function MuiVirtualizedTable<T extends unknown>(
           {params.columns}
         </TableRow>
       </>
-    );
-  };
+    )
+  }
 
   const headerRenderer = (
-    params: TableHeaderProps & { columnIndex: number }
+    params: TableHeaderProps & { columnIndex: number },
   ) => {
-    const { label, columnIndex, dataKey } = params;
-    const { columns, headerHeight } = props;
+    const { label, columnIndex, dataKey } = params
+    const { columns, headerHeight } = props
 
     return (
       <TableCell
@@ -811,7 +865,7 @@ function MuiVirtualizedTable<T extends unknown>(
           {
             [classes.firstCellElement]: columnIndex === 0,
             [classes.lastCellElement]: columnIndex === columns.length - 1,
-          }
+          },
         )}
         variant="head"
         style={{ height: headerHeight ? headerHeight : 48 }}
@@ -859,46 +913,36 @@ function MuiVirtualizedTable<T extends unknown>(
           )}
         </div>
       </TableCell>
-    );
-  };
+    )
+  }
 
-  const customRowHeight = rowHeight ? rowHeight : 48;
+  const customRowHeight = rowHeight ? rowHeight : 48
   const customHeaderHeight = headerHeight
     ? isFilterable
       ? headerHeight + 48
       : headerHeight
     : isFilterable
     ? 96
-    : 48;
+    : 48
 
-  const isCheck = Boolean(check);
-  const isEdit = Boolean(edit);
-  const isAdd = Boolean(add);
-  const isRemove = Boolean(remove);
-  const isDetail = Boolean(detailPanel);
+  const isCheck = Boolean(check)
+  const isEdit = Boolean(edit)
+  const isAdd = Boolean(add)
+  const isRemove = Boolean(remove)
+  const isDetail = Boolean(detailPanel)
 
-  const showActions = isEdit || isAdd || isRemove;
+  const showActions = isEdit || isAdd || isRemove
 
-  const rowCache = useMemo(
-    () =>
-      new CellMeasurerCache({
-        fixedWidth: true,
-        defaultHeight: 48,
-        minHeight: 48,
-      }),
-    []
-  );
-  console.log(props, customHeaderHeight);
   return (
     <AutoSizer style={{ height: "max-content" }}>
       {({ height, width }) => {
         let tableHeight =
           customRowHeight * tableData.length > height
             ? height
-            : customRowHeight * tableData.length + customHeaderHeight;
-        const newTableHeight = tableHeight + detailRows.length * 300;
+            : customRowHeight * tableData.length + customHeaderHeight
+        const newTableHeight = tableHeight + detailRows.length * 300
         if (detailRows)
-          tableHeight = newTableHeight > height ? height : newTableHeight;
+          tableHeight = newTableHeight > height ? height : newTableHeight
 
         return (
           <Paper
@@ -915,8 +959,8 @@ function MuiVirtualizedTable<T extends unknown>(
                     id: "editRow",
                     ...newEditElement,
                     tableMode: "ADD",
-                  });
-                  setAddElement((prev) => !prev);
+                  })
+                  setAddElement((prev) => !prev)
                 },
               })}
               {...(isCheck && { checkedItems, check, setCheckedItems })}
@@ -930,7 +974,7 @@ function MuiVirtualizedTable<T extends unknown>(
               rows={data.map((el: any) =>
                 Object.keys(el)
                   .filter((item) => item !== "id")
-                  .map((element: any) => el[element])
+                  .map((element: any) => el[element]),
               )}
             />
             <VTable
@@ -945,21 +989,21 @@ function MuiVirtualizedTable<T extends unknown>(
               sort={(info) => {
                 setSortOption((prev) => {
                   if (!prev.sortDirection && !prev.sortBy) {
-                    return { sortDirection: "ASC", sortBy: info.sortBy };
+                    return { sortDirection: "ASC", sortBy: info.sortBy }
                   }
                   if (
                     prev.sortDirection === "ASC" &&
                     prev.sortBy &&
                     prev.sortBy === info.sortBy
                   ) {
-                    return { sortDirection: "DESC", sortBy: info.sortBy };
+                    return { sortDirection: "DESC", sortBy: info.sortBy }
                   }
                   if (
                     prev.sortDirection === "ASC" &&
                     prev.sortBy &&
                     prev.sortBy !== info.sortBy
                   ) {
-                    return { sortDirection: "ASC", sortBy: info.sortBy };
+                    return { sortDirection: "ASC", sortBy: info.sortBy }
                   }
                   if (
                     prev.sortDirection &&
@@ -970,17 +1014,17 @@ function MuiVirtualizedTable<T extends unknown>(
                     return {
                       sortDirection: info.sortDirection,
                       sortBy: info.sortBy,
-                    };
+                    }
                   }
                   if (
                     prev.sortDirection === "DESC" &&
                     prev.sortBy &&
                     prev.sortBy !== info.sortBy
                   ) {
-                    return { sortDirection: "DESC", sortBy: info.sortBy };
+                    return { sortDirection: "DESC", sortBy: info.sortBy }
                   }
-                  return { sortDirection: undefined, sortBy: undefined };
-                });
+                  return { sortDirection: undefined, sortBy: undefined }
+                })
               }}
               rowCount={tableData.length}
               rowGetter={({ index }) => tableData[index]}
@@ -1011,7 +1055,7 @@ function MuiVirtualizedTable<T extends unknown>(
                 <Column
                   dataKey="check"
                   cellDataGetter={(params) => {
-                    const checked = checkedItems.includes(params.rowData.id);
+                    const checked = checkedItems.includes(params.rowData.id)
 
                     return (
                       params.rowData.id !== "editRow" && (
@@ -1022,15 +1066,15 @@ function MuiVirtualizedTable<T extends unknown>(
                           onChange={() =>
                             checked
                               ? setCheckedItems((prev) =>
-                                  prev.filter((el) => el !== params.rowData.id)
+                                  prev.filter((el) => el !== params.rowData.id),
                                 )
                               : setCheckedItems((prev) =>
-                                  prev.concat(params.rowData.id)
+                                  prev.concat(params.rowData.id),
                                 )
                           }
                         />
                       )
-                    );
+                    )
                   }}
                   width={60}
                   headerRenderer={(headerProps) =>
@@ -1048,7 +1092,7 @@ function MuiVirtualizedTable<T extends unknown>(
                 (
                   { dataKey, editComponent, numeric, filterDataCell, ...other },
                   index,
-                  arr
+                  arr,
                 ) => {
                   return (
                     <Column
@@ -1072,8 +1116,8 @@ function MuiVirtualizedTable<T extends unknown>(
                       width={width / arr.length}
                       {...other}
                     />
-                  );
-                }
+                  )
+                },
               )}
               {showActions && (
                 <Column
@@ -1090,25 +1134,25 @@ function MuiVirtualizedTable<T extends unknown>(
                       <IconButton
                         disableRipple
                         onClick={() => {
-                          addElement && setAddElement(false);
+                          addElement && setAddElement(false)
                           if (isAdd && editRow.tableMode === "ADD") {
-                            delete editRow.id;
-                            delete editRow.tableMode;
-                            add!(editRow);
+                            delete editRow.id
+                            delete editRow.tableMode
+                            add!(editRow)
                           }
                           if (isEdit && editRow.tableMode === "EDIT") {
-                            delete editRow.tableMode;
-                            edit!(editRow);
+                            delete editRow.tableMode
+                            edit!(editRow)
                           }
                           if (isRemove && editRow.tableMode === "REMOVE") {
-                            delete editRow.tableMode;
-                            remove!(editRow);
+                            delete editRow.tableMode
+                            remove!(editRow)
                           }
                           setEditRow({
                             id: "editRow",
                             ...newEditElement,
                             tableMode: "EDIT",
-                          });
+                          })
                         }}
                       >
                         <CheckIcon />
@@ -1118,11 +1162,11 @@ function MuiVirtualizedTable<T extends unknown>(
                         <IconButton
                           disableRipple
                           onClick={() => {
-                            addElement && setAddElement(false);
+                            addElement && setAddElement(false)
                             setEditRow({
                               ...params.rowData,
                               tableMode: "EDIT",
-                            });
+                            })
                           }}
                         >
                           <EditIcon />
@@ -1154,8 +1198,8 @@ function MuiVirtualizedTable<T extends unknown>(
                             id: "editRow",
                             ...newEditElement,
                             tableMode: "REMOVE",
-                          });
-                          setAddElement(false);
+                          })
+                          setAddElement(false)
                         }}
                       >
                         <ClearIcon />
@@ -1165,11 +1209,11 @@ function MuiVirtualizedTable<T extends unknown>(
                         <IconButton
                           disableRipple
                           onClick={() => {
-                            addElement && setAddElement(false);
+                            addElement && setAddElement(false)
                             setEditRow({
                               ...params.rowData,
                               tableMode: "REMOVE",
-                            });
+                            })
                           }}
                         >
                           <DeleteIcon />
@@ -1196,11 +1240,11 @@ function MuiVirtualizedTable<T extends unknown>(
               />
             )}
           </Paper>
-        );
+        )
       }}
     </AutoSizer>
-  );
+  )
 }
 
-const typedMemo: <T>(c: T) => T = memo;
-export default typedMemo(MuiVirtualizedTable);
+const typedMemo: <T>(c: T) => T = memo
+export default typedMemo(MuiVirtualizedTable)
