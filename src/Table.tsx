@@ -561,7 +561,7 @@ function MuiVirtualizedTable<T extends unknown>(
     let _height = 0
     for (
       let index = 0;
-      index < tableData.length > 10 ? tableData.length : 10;
+      index < (tableData.length > 10 ? tableData.length : 10);
       index++
     ) {
       _height = _height + (rowCache as any)._rowHeightCache[`${index}-0`]
