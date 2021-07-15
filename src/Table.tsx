@@ -524,15 +524,21 @@ function MuiVirtualizedTable<T extends unknown>(
     sortBy: undefined | string
   }>({ sortDirection: undefined, sortBy: undefined })
 
-  const rowCache = useMemo(
-    () =>
-      new CellMeasurerCache({
-        fixedWidth: true,
-        defaultHeight: 50,
-        minHeight: 50,
-      }),
-    [editRow],
-  )
+  // const rowCache = useMemo(
+  //   () =>
+  //     new CellMeasurerCache({
+  //       fixedWidth: true,
+  //       defaultHeight: 50,
+  //       minHeight: 50,
+  //     }),
+  //   [editRow],
+  // )
+
+  const rowCache = new CellMeasurerCache({
+    fixedWidth: true,
+    defaultHeight: 50,
+    minHeight: 50,
+  })
 
   let rowParent: any = null // let a cellRenderer supply a usable value
 
@@ -553,23 +559,23 @@ function MuiVirtualizedTable<T extends unknown>(
     ],
   )
 
-  const [tableContentHeight, setTableContentHeight] = useState<number>(
-    rowHeight ? tableData.length * rowHeight : tableData.length * 50,
-  )
+  // const [tableContentHeight, setTableContentHeight] = useState<number>(
+  //   rowHeight ? tableData.length * rowHeight : tableData.length * 50,
+  // )
 
-  useEffect(() => {
-    setEditRow(newEditElement)
-  }, [])
+  // useEffect(() => {
+  //   setEditRow(newEditElement)
+  // }, [])
 
-  useEffect(() => {
-    let _height = 0
+  // useEffect(() => {
+  //   let _height = 0
 
-    for (let index = 0; index < tableData.length; index++) {
-      _height = _height + (rowCache as any)._rowHeightCache[`${index}-0`]
-    }
-    console.log(_height)
-    !isNaN(_height) && setTableContentHeight(_height)
-  }, [tableData.length, rowCache])
+  //   for (let index = 0; index < tableData.length; index++) {
+  //     _height = _height + (rowCache as any)._rowHeightCache[`${index}-0`]
+  //   }
+  //   console.log(_height)
+  //   !isNaN(_height) && setTableContentHeight(_height)
+  // }, [tableData.length, rowCache])
 
   const isFilterable = columns.some((el: any) => el.isFilterable)
 
@@ -960,10 +966,19 @@ function MuiVirtualizedTable<T extends unknown>(
   return (
     <AutoSizer style={{ height: "max-content" }}>
       {({ height, width }) => {
+        let _height = 0
+        tableData.forEach((e: T, i: number) => {
+          const el = (rowCache as any)._rowHeightCache[`${i}-0`]
+          _height = el ? _height + el : 0
+        })
+        _height =
+          _height === 0
+            ? rowHeight
+              ? tableData.length * rowHeight
+              : tableData.length * 50
+            : _height
         let tableHeight =
-          tableContentHeight > height
-            ? height
-            : tableContentHeight + customHeaderHeight
+          _height > height ? height : _height + customHeaderHeight
         const newTableHeight = tableHeight + detailRows.length * 300
         if (detailRows)
           tableHeight = newTableHeight > height ? height : newTableHeight
