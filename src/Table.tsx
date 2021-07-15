@@ -559,7 +559,11 @@ function MuiVirtualizedTable<T extends unknown>(
 
   useEffect(() => {
     let _height = 0
-    for (let index = 0; index < tableData.length; index++) {
+    for (
+      let index = 0;
+      index < tableData.length > 10 ? tableData.length : 10;
+      index++
+    ) {
       _height = _height + (rowCache as any)._rowHeightCache[`${index}-0`]
     }
     if (isNaN(_height)) {
