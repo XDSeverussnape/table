@@ -556,8 +556,6 @@ function MuiVirtualizedTable<T extends unknown>(
   const [tableContentHeight, setTableContentHeight] = useState<number>(
     rowHeight ? tableData.length * rowHeight : tableData.length * 50,
   )
-  const [, updateState] = useState<any>()
-  const forceUpdate = useCallback(() => updateState({}), [])
 
   useEffect(() => {
     let _height = 0
@@ -565,18 +563,11 @@ function MuiVirtualizedTable<T extends unknown>(
       _height = _height + (rowCache as any)._rowHeightCache[`${index}-0`]
     }
     if (isNaN(_height)) {
-      forceUpdate()
+      setTableContentHeight(tableContentHeight + 1)
     } else {
       setTableContentHeight(_height)
     }
-  }, [
-    tableData.length,
-    editRow,
-    rowCache,
-    newEditElement,
-    tableContentHeight,
-    forceUpdate,
-  ])
+  }, [tableData.length, editRow, rowCache, newEditElement, tableContentHeight])
 
   const isFilterable = columns.some((el: any) => el.isFilterable)
 
