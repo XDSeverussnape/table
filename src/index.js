@@ -8,6 +8,42 @@ const someText = "Some beautiful text"
 const testText =
   "Lorem ipsum, dolor sit amet consectetur adipisicing elit. Dicta, obcaecati! Temporibus, dicta quidem? Nobis sunt qui impedit corporis voluptas voluptate optio mollitia quis laudantium pariatur iste nemo, tenetur, minima fugiat modi, iure dolorum unde. Deleniti iste suscipit rem repellat ipsum amet similique quos recusandae enim eos aliquam doloremque, accusamus, in reprehenderit veniam blanditiis temporibus! Eius natus aspernatur deleniti illum vitae atque laudantium eligendi fugiat porro commodi. Minima, dolor, facere dolore iure libero, fuga dolores consectetur quidem officiis accusantium exercitationem ab odio. Veniam quo excepturi non, fugiat nisi voluptates velit quisquam omnis? Ea fugiat reiciendis nesciunt voluptas! Vel ea eum eveniet?"
 
+const data = [
+  {
+    id: Math.random(),
+    test1: someText,
+    test2: someText,
+    test3: someText,
+    test4: someText,
+    test5: testText,
+    test6: someText,
+    test7: someText,
+    test8: someText,
+  },
+  {
+    id: Math.random(),
+    test1: someText,
+    test2: testText,
+    test3: someText,
+    test4: someText,
+    test5: someText,
+    test6: someText,
+    test7: someText,
+    test8: someText,
+  },
+  {
+    id: Math.random(),
+    test1: someText,
+    test2: someText,
+    test3: someText,
+    test4: someText,
+    test5: someText,
+    test6: someText,
+    test7: someText,
+    test8: testText,
+  },
+]
+
 ReactDOM.render(
   <div
     style={{
@@ -18,18 +54,18 @@ ReactDOM.render(
     }}
   >
     <Table
+      onRowClick={() => console.log("48")}
       title="Test"
-      data={Array.from({ length: 10000 }).map((el, i) => ({
-        id: i + 1,
-        name:
-          i === 2 || i === 10 || i === 28
-            ? testText
-            : someText + `  ----> ${i + 1}`,
-      }))}
+      data={data}
       columns={[
-        { label: "test1", dataKey: "name" },
-        { label: "test2", dataKey: "name" },
-        { label: "test3", dataKey: "name" },
+        { label: "test1", dataKey: "test1" },
+        { label: "test2", dataKey: "test2" },
+        { label: "test3", dataKey: "test3" },
+        { label: "test4", dataKey: "test4" },
+        { label: "test5", dataKey: "test5" },
+        { label: "test6", dataKey: "test6" },
+        { label: "test7", dataKey: "test7" },
+        { label: "test8", dataKey: "test8" },
       ]}
     />
   </div>,

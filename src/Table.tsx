@@ -5,7 +5,9 @@ import React, {
   SyntheticEvent,
   useRef,
   useState,
+  useEffect,
   useMemo,
+  useCallback,
 } from "react"
 import clsx from "clsx"
 import { createStyles, darken, Theme } from "@material-ui/core/styles"
@@ -53,7 +55,6 @@ import { CsvBuilder } from "filefy"
 import { jsPDF } from "jspdf"
 import InputAdornment from "@material-ui/core/InputAdornment"
 import FilterListIcon from "@material-ui/icons/FilterList"
-import { CellPosition } from "react-virtualized/dist/es/CellMeasurer"
 
 const compareValue = (data: any, filterString: any, index: any) => {
   const filter = filterString.toLowerCase()
@@ -523,15 +524,18 @@ function MuiVirtualizedTable<T extends unknown>(
     sortBy: undefined | string
   }>({ sortDirection: undefined, sortBy: undefined })
 
-  const rowCache = new CellMeasurerCache({
-    fixedWidth: true,
-    defaultHeight: 48,
-    minHeight: 48,
-  })
+  const rowCache = useMemo(
+    () =>
+      new CellMeasurerCache({
+        fixedWidth: true,
+        defaultHeight: 50,
+        minHeight: 50,
+      }),
+    [],
+  )
 
   let rowParent: any = null // let a cellRenderer supply a usable value
 
-  console.log(rowCache)
   let tableData = filterData(
     data,
     filters,
@@ -548,6 +552,31 @@ function MuiVirtualizedTable<T extends unknown>(
         (sortOption.sortDirection.toLowerCase() as any),
     ],
   )
+
+  const [tableContentHeight, setTableContentHeight] = useState<number>(
+    rowHeight ? tableData.length * rowHeight : tableData.length * 50,
+  )
+  const [, updateState] = useState<any>()
+  const forceUpdate = useCallback(() => updateState({}), [])
+
+  useEffect(() => {
+    let _height = 0
+    for (let index = 0; index < tableData.length; index++) {
+      _height = _height + (rowCache as any)._rowHeightCache[`${index}-0`]
+    }
+    if (isNaN(_height)) {
+      forceUpdate()
+    } else {
+      setTableContentHeight(_height)
+    }
+  }, [
+    tableData.length,
+    editRow,
+    rowCache,
+    newEditElement,
+    tableContentHeight,
+    forceUpdate,
+  ])
 
   const isFilterable = columns.some((el: any) => el.isFilterable)
 
@@ -658,7 +687,7 @@ function MuiVirtualizedTable<T extends unknown>(
                         rowIndex,
                         0,
                         rowCache.getWidth(rowIndex, 0),
-                        48,
+                        50,
                       )
                       null !== tableRef.current &&
                         tableRef.current &&
@@ -775,7 +804,7 @@ function MuiVirtualizedTable<T extends unknown>(
         {isFilterable && (
           <TableRow
             className={clsx(params.className, classes.headerRow)}
-            style={{ ...params.style, display: "flex", height: 48 }}
+            style={{ ...params.style, display: "flex", height: 50 }}
             component="div"
           >
             {params.columns.map((_: any, i) => {
@@ -805,7 +834,7 @@ function MuiVirtualizedTable<T extends unknown>(
                   variant="head"
                   style={{
                     ..._.props.style,
-                    height: 48,
+                    height: 50,
                     borderBottom: "none",
                     padding: "0px 5px",
                   }}
@@ -843,7 +872,7 @@ function MuiVirtualizedTable<T extends unknown>(
             ...params.style,
             width: "auto",
             display: "flex",
-            height: headerHeight ? headerHeight : 48,
+            height: headerHeight ? headerHeight : 50,
           }}
           component="div"
         >
@@ -872,8 +901,7 @@ function MuiVirtualizedTable<T extends unknown>(
           },
         )}
         variant="head"
-        style={{ height: headerHeight ? headerHeight : 48 }}
-        //align={columns[columnIndex] ? columnIndex !== 0 ? 'right' : 'left' : "center"}
+        style={{ height: headerHeight ? headerHeight : 50 }}
       >
         <div
           style={{
@@ -920,14 +948,13 @@ function MuiVirtualizedTable<T extends unknown>(
     )
   }
 
-  const customRowHeight = rowHeight ? rowHeight : 48
   const customHeaderHeight = headerHeight
     ? isFilterable
-      ? headerHeight + 48
+      ? headerHeight + 50
       : headerHeight
     : isFilterable
     ? 96
-    : 48
+    : 50
 
   const isCheck = Boolean(check)
   const isEdit = Boolean(edit)
@@ -941,9 +968,9 @@ function MuiVirtualizedTable<T extends unknown>(
     <AutoSizer style={{ height: "max-content" }}>
       {({ height, width }) => {
         let tableHeight =
-          customRowHeight * tableData.length > height
+          tableContentHeight > height
             ? height
-            : customRowHeight * tableData.length + customHeaderHeight
+            : tableContentHeight + customHeaderHeight
         const newTableHeight = tableHeight + detailRows.length * 300
         if (detailRows)
           tableHeight = newTableHeight > height ? height : newTableHeight
