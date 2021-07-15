@@ -194,6 +194,7 @@ const useStyles = makeStyles((theme: Theme) =>
     tableCell: {
       flex: 1,
       padding: 2,
+      borderBottom: "none",
     },
     firstCellElement: {
       paddingLeft: 10,
@@ -578,7 +579,6 @@ function MuiVirtualizedTable<T extends unknown>(
         rowIndex={rowIndex}
       >
         {(measurerParams) => {
-          console.log(measurerParams)
           return (
             <TableCell
               ref={measurerParams.registerChild}
@@ -732,7 +732,11 @@ function MuiVirtualizedTable<T extends unknown>(
             )}
             component="div"
             key={params.key}
-            style={{ ...params.style, height: "max-content" }}
+            style={{
+              ...params.style,
+              height: "max-content",
+              borderBottom: "1px solid rgba(224, 224, 224, 1)",
+            }}
           >
             {params.columns}
           </TableRow>
@@ -741,7 +745,7 @@ function MuiVirtualizedTable<T extends unknown>(
               component="div"
               style={{
                 ...params.style,
-                // height: rowCache.getHeight(index, 0),
+                borderBottom: "1px solid rgba(224, 224, 224, 1)",
                 height: "max-content",
               }}
             >
