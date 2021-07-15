@@ -524,15 +524,11 @@ function MuiVirtualizedTable<T extends unknown>(
     sortBy: undefined | string
   }>({ sortDirection: undefined, sortBy: undefined })
 
-  const rowCache = useMemo(
-    () =>
-      new CellMeasurerCache({
-        fixedWidth: true,
-        defaultHeight: 50,
-        minHeight: 50,
-      }),
-    [],
-  )
+  const rowCache = new CellMeasurerCache({
+    fixedWidth: true,
+    defaultHeight: 50,
+    minHeight: 50,
+  })
 
   let rowParent: any = null // let a cellRenderer supply a usable value
 
@@ -558,7 +554,7 @@ function MuiVirtualizedTable<T extends unknown>(
   )
 
   useEffect(() => {
-    setTableContentHeight((prev) => prev + 1)
+    setEditRow(newEditElement)
   }, [])
 
   useEffect(() => {
