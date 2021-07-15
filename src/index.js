@@ -22,7 +22,7 @@ ReactDOM.render(
       add={() => console.log("48")}
       edit={() => console.log("48")}
       title="Test"
-      data={Array.from({ length: 3 }).map((el, i) => ({
+      data={Array.from({ length: 30000 }).map((el, i) => ({
         id: Math.random(),
         test1: someText,
         test2: someText,

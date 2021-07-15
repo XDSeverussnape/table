@@ -636,6 +636,7 @@ function MuiVirtualizedTable<T extends unknown>(
               })}
               variant="body"
               style={{
+                whiteSpace: "normal",
                 height: rowHeight
                   ? rowHeight
                   : rowCache.getHeight(rowIndex, columnIndex),
