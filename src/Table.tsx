@@ -162,14 +162,23 @@ const useStyles = makeStyles((theme: Theme) =>
       "& .ReactVirtualized__Table__headerRow": {
         flip: false,
         paddingRight: theme.direction === "rtl" ? "0 !important" : undefined,
+        boxSizing: "border-box",
+        alignItems: "center",
+        display: "flex",
+        padding: "0px 5px",
       },
       "& .ReactVirtualized__Table__rowColumn": {
         marginRight: 0,
         marginLeft: 0,
+        boxSizing: "border-box",
       },
       "& .ReactVirtualized__Table__headerColumn": {
         marginRight: 0,
         marginLeft: 0,
+      },
+      "& .ReactVirtualized__Table__row": {
+        boxSizing: "border-box",
+        padding: "0px 5px",
       },
     },
     tableRow: {
@@ -184,7 +193,7 @@ const useStyles = makeStyles((theme: Theme) =>
       backgroundColor:
         theme.palette.type === "light"
           ? lighten(theme.palette.primary.main, 0.85)
-          : darken(theme.palette.primary.main, 0.45),
+          : darken(theme.palette.primary.main, 0.4),
       "&:hover": {
         backgroundColor:
           theme.palette.type === "light"
@@ -194,7 +203,7 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     tableCell: {
       flex: 1,
-      padding: 2,
+      padding: "0px 5px",
       borderBottom: "none",
     },
     firstCellElement: {
@@ -223,7 +232,7 @@ const useToolbarStyles = makeStyles((theme: Theme) => ({
     backgroundColor:
       theme.palette.type === "light"
         ? lighten(theme.palette.primary.main, 0.85)
-        : darken(theme.palette.primary.main, 0.45),
+        : darken(theme.palette.primary.main, 0.4),
   },
   title: {
     flex: "1 1 100%",
@@ -344,7 +353,10 @@ const EnhancedTableToolbar = (props: ITooltipProps) => {
                 const { icon: Icon, tooltip, onClick }: IAction = action
                 return (
                   <Tooltip key={String(tooltip)} title={tooltip}>
-                    <IconButton onClick={(e) => onClick(e, props.data)}>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => onClick(e, props.data)}
+                    >
                       <Icon />
                     </IconButton>
                   </Tooltip>
@@ -354,6 +366,7 @@ const EnhancedTableToolbar = (props: ITooltipProps) => {
           {check && checkedItems!?.length > 0 && (
             <Tooltip title={check.tooltip}>
               <IconButton
+                size="small"
                 onClick={(e) => {
                   if (window.confirm("Napewno?")) {
                     check.onClick(checkedItems!)
@@ -367,8 +380,8 @@ const EnhancedTableToolbar = (props: ITooltipProps) => {
           )}
           {props.exportFile && showCheckIcon && (
             <div>
-              <IconButton onClick={handleClick}>
-                <SaveAltIcon />
+              <IconButton size="small" onClick={handleClick}>
+                <SaveAltIcon fontSize="small" />
               </IconButton>
               <Popover
                 anchorEl={anchorEl}
@@ -416,8 +429,8 @@ const EnhancedTableToolbar = (props: ITooltipProps) => {
           )}
           {props.isAdd && (
             <Tooltip title="Dodaj">
-              <IconButton onClick={props.isAdd}>
-                <AddIcon />
+              <IconButton size="small" onClick={props.isAdd}>
+                <AddIcon fontSize="small" />
               </IconButton>
             </Tooltip>
           )}
@@ -528,16 +541,16 @@ function MuiVirtualizedTable<T extends unknown>(
   //   () =>
   //     new CellMeasurerCache({
   //       fixedWidth: true,
-  //       defaultHeight: 50,
-  //       minHeight: 50,
+  //       defaultHeight: 44,
+  //       minHeight: 44,
   //     }),
   //   [editRow],
   // )
 
   const rowCache = new CellMeasurerCache({
     fixedWidth: true,
-    defaultHeight: 50,
-    minHeight: 50,
+    defaultHeight: 44,
+    minHeight: 44,
   })
 
   let rowParent: any = null // let a cellRenderer supply a usable value
@@ -558,32 +571,23 @@ function MuiVirtualizedTable<T extends unknown>(
         (sortOption.sortDirection.toLowerCase() as any),
     ],
   )
+  detailRows.forEach((id) => {
+    tableData.splice(id + 1, 0, { id: `detailRow-${id}` })
+  })
 
-  // const [tableContentHeight, setTableContentHeight] = useState<number>(
-  //   rowHeight ? tableData.length * rowHeight : tableData.length * 50,
-  // )
-
-  // useEffect(() => {
-  //   setEditRow(newEditElement)
-  // }, [])
-
-  // useEffect(() => {
-  //   let _height = 0
-
-  //   for (let index = 0; index < tableData.length; index++) {
-  //     _height = _height + (rowCache as any)._rowHeightCache[`${index}-0`]
-  //   }
-  //   console.log(_height)
-  //   !isNaN(_height) && setTableContentHeight(_height)
-  // }, [tableData.length, rowCache])
+  const [tableHeight, setHeight] = useState<number>(400)
 
   const isFilterable = columns.some((el: any) => el.isFilterable)
 
   const cellRenderer = (
     params: TableCellProps & {
+      isActionUsage: boolean
       editComponent?: (props: any) => JSX.Element
       numeric?: boolean
       filterDataCell?: (row: T) => string | number | boolean
+      colInd: number
+      last: boolean
+      first: boolean
     },
   ) => {
     const {
@@ -595,6 +599,10 @@ function MuiVirtualizedTable<T extends unknown>(
       parent,
       rowIndex,
       numeric,
+      isActionUsage,
+      colInd,
+      last,
+      first,
     } = params
     const { columns, rowHeight, onRowClick, check, detailPanel } = props
     rowParent = parent
@@ -608,51 +616,27 @@ function MuiVirtualizedTable<T extends unknown>(
       >
         {(measurerParams) => {
           return (
-            <TableCell
-              ref={measurerParams.registerChild}
+            <div
+              ref={measurerParams.registerChild as any}
               onLoad={measurerParams.measure}
-              component="div"
-              {...(dataKey === "check" && {
-                onClick: (e) => e.stopPropagation(),
-              })}
-              {...(dataKey === "edit" && {
-                onClick: (e) => e.stopPropagation(),
-              })}
-              {...(dataKey === "remove" && {
-                onClick: (e) => e.stopPropagation(),
-              })}
-              {...(dataKey === "detail" && {
-                onClick: (e) => e.stopPropagation(),
-              })}
-              {...(rowData.id === editRow.id && {
-                onClick: (e) => e.stopPropagation(),
-              })}
+              {...(isActionUsage ||
+                (rowData.id === editRow.id && {
+                  onClick: (e) => e.stopPropagation(),
+                }))}
               className={clsx(classes.tableCell, classes.flexContainer, {
                 [classes.noClick]: onRowClick == null,
-                [classes.firstCellElement]:
-                  columnIndex === (check ? (detailPanel ? 2 : 1) : 0),
-                [classes.lastCellElement]:
-                  columnIndex === columns.length - (check ? 0 : 1),
+                [classes.firstCellElement]: first,
+                [classes.lastCellElement]: last,
               })}
-              variant="body"
               style={{
                 whiteSpace: "normal",
                 height: rowHeight
                   ? rowHeight
                   : rowCache.getHeight(rowIndex, columnIndex),
-                ...(dataKey === "check" && { justifyContent: "center" }),
+                ...(isActionUsage && { justifyContent: "center" }),
               }}
-              align={
-                columnIndex !== (check ? (detailPanel ? 2 : 1) : 0)
-                  ? "right"
-                  : "left"
-              }
             >
-              {editRow.id === rowData.id &&
-              dataKey !== "check" &&
-              dataKey !== "edit" &&
-              dataKey !== "remove" &&
-              editRow.tableMode !== "REMOVE" ? (
+              {editRow.id === rowData.id && editRow.tableMode !== "REMOVE" ? (
                 editComponent ? (
                   editComponent({
                     value: editRow[dataKey],
@@ -663,7 +647,7 @@ function MuiVirtualizedTable<T extends unknown>(
                       })),
                     data: rowData,
                   })
-                ) : (
+                ) : isActionUsage ? (
                   <TextField
                     fullWidth
                     type={numeric ? "number" : "text"}
@@ -677,40 +661,25 @@ function MuiVirtualizedTable<T extends unknown>(
                       }))
                     }
                   />
-                )
+                ) : colInd === columnIndex ? (
+                  cellData
+                ) : null
               ) : detailPanel && dataKey === "detail" ? (
                 <IconButton
+                  size="small"
                   disableRipple
                   onClick={() => {
                     if (detailRows.includes(rowIndex)) {
-                      rowCache.set(
-                        rowIndex,
-                        0,
-                        rowCache.getWidth(rowIndex, 0),
-                        50,
-                      )
-                      null !== tableRef.current &&
-                        tableRef.current &&
-                        tableRef.current.recomputeRowHeights(rowIndex)
-                      //null !== tableRef.current && tableRef.current && tableRef.current.forceUpdate()
                       setDetailRows((prev) =>
                         prev.filter((el) => el !== rowIndex),
                       )
                     } else {
-                      rowCache.set(
-                        rowIndex,
-                        0,
-                        rowCache.getWidth(rowIndex, 0),
-                        300,
-                      )
-                      null !== tableRef.current &&
-                        tableRef.current &&
-                        tableRef.current.recomputeRowHeights(rowIndex)
                       setDetailRows((prev) => prev.concat(rowIndex))
                     }
                   }}
                 >
                   <ChevronRightIcon
+                    fontSize="small"
                     style={{
                       transform: detailRows.includes(rowIndex)
                         ? "rotate(90deg)"
@@ -721,7 +690,7 @@ function MuiVirtualizedTable<T extends unknown>(
               ) : (
                 cellData
               )}
-            </TableCell>
+            </div>
           )
         }}
       </CellMeasurer>
@@ -740,8 +709,18 @@ function MuiVirtualizedTable<T extends unknown>(
         parent={rowParent as any}
         rowIndex={params.index}
       >
-        <>
-          <TableRow
+        {String(rowData.id).startsWith("detailRow-") ? (
+          <div
+            style={{
+              ...params.style,
+              borderBottom: "1px solid rgba(224, 224, 224, 1)",
+              height: "max-content",
+            }}
+          >
+            {detailPanel!(tableData.find((el: T, i: number) => i === index))}
+          </div>
+        ) : (
+          <div
             onClick={(event: React.MouseEvent<HTMLTableRowElement>) => {
               if (params.onRowClick) {
                 setRowIndex(
@@ -759,149 +738,137 @@ function MuiVirtualizedTable<T extends unknown>(
                 [classes.tableRowSelected]: index === rowIndex,
               },
             )}
-            component="div"
             key={params.key}
             style={{
               ...params.style,
-              height: "max-content",
               borderBottom: "1px solid rgba(224, 224, 224, 1)",
             }}
           >
             {params.columns}
-          </TableRow>
-          {detailPanel && detailRows.includes(index) && (
-            <TableRow
-              component="div"
-              style={{
-                ...params.style,
-                borderBottom: "1px solid rgba(224, 224, 224, 1)",
-                height: "max-content",
-              }}
-            >
-              {detailPanel(rowData)}
-            </TableRow>
-          )}
-        </>
+          </div>
+        )}
       </CellMeasurer>
     )
   }
 
-  const headerRowRenderer = (params: TableHeaderRowProps) => {
-    const { columns, headerHeight } = props
-    const handleChange = debounce(
-      (value, index) =>
-        setFilters((prev) => prev.map((_, i) => (i === index ? value : _))),
-      500,
-    )
-    const actionColumn: ColumnData = { dataKey: "", label: "" }
-    let allColumns = [...columns]
-    if (props.check) allColumns = [actionColumn, ...allColumns]
-    if (props.add) allColumns = [...allColumns, actionColumn]
-    if (props.edit) allColumns = [...allColumns, actionColumn]
+  // const headerRowRenderer = (params: TableHeaderRowProps) => {
+  //   const { columns, headerHeight } = props
+  //   const handleChange = debounce(
+  //     (value, index) =>
+  //       setFilters((prev) => prev.map((_, i) => (i === index ? value : _))),
+  //     500,
+  //   )
+  //   const actionColumn: ColumnData = { dataKey: "", label: "" }
+  //   let allColumns = [...columns]
+  //   if (props.check) allColumns = [actionColumn, ...allColumns]
+  //   if (props.add) allColumns = [...allColumns, actionColumn]
+  //   if (props.edit) allColumns = [...allColumns, actionColumn]
 
-    return (
-      <>
-        {isFilterable && (
-          <TableRow
-            className={clsx(params.className, classes.headerRow)}
-            style={{ ...params.style, display: "flex", height: 50 }}
-            component="div"
-          >
-            {params.columns.map((_: any, i) => {
-              const index =
-                props.check && props.detailPanel
-                  ? i - 2
-                  : props.detailPanel
-                  ? i - 1
-                  : props.check
-                  ? i - 1
-                  : i
+  //   return (
+  //     <>
+  //       {isFilterable && (
+  //         <TableRow
+  //           className={clsx(params.className, classes.headerRow)}
+  //           style={{ ...params.style, display: "flex", height: 44 }}
+  //           component="div"
+  //         >
+  //           {params.columns.map((_: any, i) => {
+  //             const index =
+  //               props.check && props.detailPanel
+  //                 ? i - 2
+  //                 : props.detailPanel
+  //                 ? i - 1
+  //                 : props.check
+  //                 ? i - 1
+  //                 : i
 
-              return (
-                <TableCell
-                  key={i}
-                  component="div"
-                  onClick={(e) => e.stopPropagation()}
-                  className={clsx(
-                    classes.tableCell,
-                    classes.flexContainer,
-                    classes.noClick,
-                    {
-                      [classes.firstCellElement]: index === 0,
-                      [classes.lastCellElement]: i === allColumns.length - 1,
-                    },
-                  )}
-                  variant="head"
-                  style={{
-                    ..._.props.style,
-                    height: 50,
-                    borderBottom: "none",
-                    padding: "0px 5px",
-                  }}
-                  align={
-                    allColumns[index]
-                      ? index !== 0
-                        ? "right"
-                        : "left"
-                      : "center"
-                  }
-                >
-                  {columns[index] && columns[index].isFilterable && (
-                    <TextField
-                      style={{ padding: 0 }}
-                      defaultValue={filters[i]}
-                      onChange={(e) => handleChange(e.target.value, index)}
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <FilterListIcon fontSize="small" />
-                          </InputAdornment>
-                        ),
-                      }}
-                      fullWidth
-                    />
-                  )}
-                </TableCell>
-              )
-            })}
-          </TableRow>
-        )}
-        <TableRow
-          className={clsx(params.className, classes.headerRow)}
-          style={{
-            ...params.style,
-            width: "auto",
-            display: "flex",
-            height: headerHeight ? headerHeight : 50,
-          }}
-          component="div"
-        >
-          {params.columns}
-        </TableRow>
-      </>
-    )
-  }
+  //             return (
+  //               <TableCell
+  //                 key={i}
+  //                 component="div"
+  //                 onClick={(e) => e.stopPropagation()}
+  //                 className={clsx(
+  //                   classes.tableCell,
+  //                   classes.flexContainer,
+  //                   classes.noClick,
+  //                   {
+  //                     [classes.firstCellElement]: index === 0,
+  //                     [classes.lastCellElement]: i === allColumns.length - 1,
+  //                   },
+  //                 )}
+  //                 variant="head"
+  //                 style={{
+  //                   ..._.props.style,
+  //                   height: 44,
+  //                   borderBottom: "none",
+  //                   padding: "0px 5px",
+  //                 }}
+  //                 align={
+  //                   allColumns[index]
+  //                     ? index !== 0
+  //                       ? "right"
+  //                       : "left"
+  //                     : "center"
+  //                 }
+  //               >
+  //                 {columns[index] && columns[index].isFilterable && (
+  //                   <TextField
+  //                     style={{ padding: 0 }}
+  //                     defaultValue={filters[i]}
+  //                     onChange={(e) => handleChange(e.target.value, index)}
+  //                     InputProps={{
+  //                       endAdornment: (
+  //                         <InputAdornment position="end">
+  //                           <FilterListIcon fontSize="small" />
+  //                         </InputAdornment>
+  //                       ),
+  //                     }}
+  //                     fullWidth
+  //                   />
+  //                 )}
+  //               </TableCell>
+  //             )
+  //           })}
+  //         </TableRow>
+  //       )}
+  //       <TableRow
+  //         className={clsx(params.className, classes.headerRow)}
+  //         style={{
+  //           ...params.style,
+  //           width: "auto",
+  //           display: "flex",
+  //           height: headerHeight ? headerHeight : 44,
+  //         }}
+  //         component="div"
+  //       >
+  //         {params.columns}
+  //       </TableRow>
+  //     </>
+  //   )
+  // }
 
   const headerRenderer = (
-    params: TableHeaderProps & { columnIndex: number },
+    params: TableHeaderProps & {
+      columnIndex: number
+      first?: boolean
+      last?: boolean
+    },
   ) => {
-    const { label, columnIndex, dataKey } = params
+    const { label, columnIndex, dataKey, first, last } = params
     const { columns, headerHeight } = props
 
     return (
-      <TableCell
-        component="div"
+      <div
         className={clsx(
           classes.tableCell,
           classes.flexContainer,
           classes.noClick,
           {
-            [classes.firstCellElement]: columnIndex === 0,
-            [classes.lastCellElement]: columnIndex === columns.length - 1,
+            [classes.firstCellElement]: first,
+            [classes.lastCellElement]: last,
           },
         )}
-        variant="head"
-        style={{ height: headerHeight ? headerHeight : 50 }}
+        style={{ height: headerHeight ? headerHeight : 44 }}
       >
         <div
           style={{
@@ -927,7 +894,9 @@ function MuiVirtualizedTable<T extends unknown>(
           ) : null}
           {dataKey === "check" ? (
             <Checkbox
+              size="small"
               disableRipple
+              style={{ padding: 0 }}
               color="default"
               indeterminate={
                 checkedItems.length > 0 &&
@@ -944,17 +913,17 @@ function MuiVirtualizedTable<T extends unknown>(
             <span style={{ userSelect: "none" }}>{label}</span>
           )}
         </div>
-      </TableCell>
+      </div>
     )
   }
 
   const customHeaderHeight = headerHeight
     ? isFilterable
-      ? headerHeight + 50
+      ? headerHeight + 44
       : headerHeight
     : isFilterable
     ? 96
-    : 50
+    : 44
 
   const isCheck = Boolean(check)
   const isEdit = Boolean(edit)
@@ -965,326 +934,457 @@ function MuiVirtualizedTable<T extends unknown>(
   const showActions = isEdit || isAdd || isRemove
 
   return (
-    <AutoSizer style={{ height: "max-content" }}>
+    <AutoSizer>
       {({ height, width }) => {
-        let _height = 0
-        tableData.forEach((e: T, i: number) => {
-          const el = (rowCache as any)._rowHeightCache[`${i}-0`]
-          _height = el ? _height + el : 0
-        })
-        _height =
-          _height === 0
-            ? rowHeight
-              ? tableData.length * rowHeight
-              : tableData.length * 50
-            : _height
-        let tableHeight =
-          _height > height ? height : _height + customHeaderHeight
-        const newTableHeight = tableHeight + detailRows.length * 300
-        if (detailRows)
-          tableHeight = newTableHeight > height ? height : newTableHeight
-
-        return (
-          <Paper
-            style={{
+        return height > 0 ? (
+          <TableComponent
+            {...{
+              tableHeight,
               width,
-              height: tableHeight + 64 + (isPagination ? 52 : 0),
+              isPagination,
+              isAdd,
+              data,
+              setEditRow,
+              newEditElement,
+              setAddElement,
+              isCheck,
+              tableData,
+              checkedItems,
+              check,
+              setCheckedItems,
+              title,
+              exportFile,
+              exportFileName,
+              columns,
+              tableRef,
+              rowCache,
+              editRow,
+              classes,
+              setSortOption,
+              customHeaderHeight,
+              rowRenderer,
+              onRowClick,
+              //headerRowRenderer,
+              sortOption,
+              isDetail,
+              headerRenderer,
+              cellRenderer,
+              showActions,
+              addElement,
+              isEdit,
+              add,
+              edit,
+              remove,
+              isRemove,
+              setHeight,
+              height,
             }}
-          >
-            <EnhancedTableToolbar
-              data={data}
-              {...(isAdd && {
-                isAdd: () => {
-                  setEditRow({
-                    id: "editRow",
-                    ...newEditElement,
-                    tableMode: "ADD",
-                  })
-                  setAddElement((prev) => !prev)
-                },
-              })}
-              {...(isCheck && { checkedItems, check, setCheckedItems })}
-              allRecord={tableData.length}
-              actions={props.actions!}
-              title={title}
-              numSelected={checkedItems.length}
-              exportFile={exportFile}
-              exportFileName={exportFileName}
-              columns={columns.map((el) => el.dataKey)}
-              rows={data.map((el: any) =>
-                Object.keys(el)
-                  .filter((item) => item !== "id")
-                  .map((element: any) => el[element]),
-              )}
-            />
-            <VTable
-              ref={tableRef}
-              height={tableHeight}
-              width={width}
-              rowHeight={rowCache.rowHeight}
-              gridStyle={{
-                direction: "inherit",
-              }}
-              {...(editRow.tableMode === "ADD" && { scrollToIndex: 0 })}
-              sort={(info) => {
-                setSortOption((prev) => {
-                  if (!prev.sortDirection && !prev.sortBy) {
-                    return { sortDirection: "ASC", sortBy: info.sortBy }
-                  }
-                  if (
-                    prev.sortDirection === "ASC" &&
-                    prev.sortBy &&
-                    prev.sortBy === info.sortBy
-                  ) {
-                    return { sortDirection: "DESC", sortBy: info.sortBy }
-                  }
-                  if (
-                    prev.sortDirection === "ASC" &&
-                    prev.sortBy &&
-                    prev.sortBy !== info.sortBy
-                  ) {
-                    return { sortDirection: "ASC", sortBy: info.sortBy }
-                  }
-                  if (
-                    prev.sortDirection &&
-                    prev.sortDirection !== info.sortDirection &&
-                    prev.sortBy &&
-                    prev.sortBy !== info.sortBy
-                  ) {
-                    return {
-                      sortDirection: info.sortDirection,
-                      sortBy: info.sortBy,
-                    }
-                  }
-                  if (
-                    prev.sortDirection === "DESC" &&
-                    prev.sortBy &&
-                    prev.sortBy !== info.sortBy
-                  ) {
-                    return { sortDirection: "DESC", sortBy: info.sortBy }
-                  }
-                  return { sortDirection: undefined, sortBy: undefined }
-                })
-              }}
-              rowCount={tableData.length}
-              rowGetter={({ index }) => tableData[index]}
-              headerHeight={customHeaderHeight}
-              className={classes.table}
-              rowRenderer={rowRenderer}
-              onRowClick={onRowClick}
-              headerRowRenderer={headerRowRenderer}
-              sortDirection={sortOption.sortDirection}
-              deferredMeasurementCache={rowCache}
-            >
-              {isDetail && (
-                <Column
-                  dataKey="detail"
-                  width={60}
-                  headerRenderer={(headerProps) =>
-                    headerRenderer({
-                      ...headerProps,
-                      columnIndex: -2,
-                    })
-                  }
-                  className={classes.flexContainer}
-                  disableSort
-                  cellRenderer={cellRenderer}
-                />
-              )}
-              {isCheck && (
-                <Column
-                  dataKey="check"
-                  cellDataGetter={(params) => {
-                    const checked = checkedItems.includes(params.rowData.id)
-
-                    return (
-                      params.rowData.id !== "editRow" && (
-                        <Checkbox
-                          disableRipple
-                          color="default"
-                          checked={checked}
-                          onChange={() =>
-                            checked
-                              ? setCheckedItems((prev) =>
-                                  prev.filter((el) => el !== params.rowData.id),
-                                )
-                              : setCheckedItems((prev) =>
-                                  prev.concat(params.rowData.id),
-                                )
-                          }
-                        />
-                      )
-                    )
-                  }}
-                  width={60}
-                  headerRenderer={(headerProps) =>
-                    headerRenderer({
-                      ...headerProps,
-                      columnIndex: -1,
-                    })
-                  }
-                  className={classes.flexContainer}
-                  disableSort
-                  cellRenderer={cellRenderer}
-                />
-              )}
-              {columns.map(
-                (
-                  { dataKey, editComponent, numeric, filterDataCell, ...other },
-                  index,
-                  arr,
-                ) => {
-                  return (
-                    <Column
-                      key={dataKey}
-                      headerRenderer={(headerProps) =>
-                        headerRenderer({
-                          ...headerProps,
-                          columnIndex: index,
-                        })
-                      }
-                      className={classes.flexContainer}
-                      cellRenderer={(cellProps) =>
-                        cellRenderer({
-                          ...cellProps,
-                          editComponent,
-                          numeric,
-                          filterDataCell,
-                        })
-                      }
-                      dataKey={dataKey}
-                      width={width / arr.length}
-                      {...other}
-                    />
-                  )
-                },
-              )}
-              {showActions && (
-                <Column
-                  dataKey="edit"
-                  width={60}
-                  headerRenderer={(headerProps) =>
-                    headerRenderer({
-                      ...headerProps,
-                      columnIndex: columns.length,
-                    })
-                  }
-                  cellDataGetter={(params) =>
-                    params.rowData.id === editRow.id ? (
-                      <IconButton
-                        disableRipple
-                        onClick={() => {
-                          addElement && setAddElement(false)
-                          if (isAdd && editRow.tableMode === "ADD") {
-                            delete editRow.id
-                            delete editRow.tableMode
-                            add!(editRow)
-                          }
-                          if (isEdit && editRow.tableMode === "EDIT") {
-                            delete editRow.tableMode
-                            edit!(editRow)
-                          }
-                          if (isRemove && editRow.tableMode === "REMOVE") {
-                            delete editRow.tableMode
-                            remove!(editRow)
-                          }
-                          setEditRow({
-                            id: "editRow",
-                            ...newEditElement,
-                            tableMode: "EDIT",
-                          })
-                        }}
-                      >
-                        <CheckIcon />
-                      </IconButton>
-                    ) : (
-                      isEdit && (
-                        <IconButton
-                          disableRipple
-                          onClick={() => {
-                            addElement && setAddElement(false)
-                            setEditRow({
-                              ...params.rowData,
-                              tableMode: "EDIT",
-                            })
-                          }}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                      )
-                    )
-                  }
-                  className={classes.flexContainer}
-                  disableSort
-                  cellRenderer={cellRenderer}
-                />
-              )}
-              {showActions && (
-                <Column
-                  dataKey="remove"
-                  width={60}
-                  headerRenderer={(headerProps) =>
-                    headerRenderer({
-                      ...headerProps,
-                      columnIndex: columns.length + 1,
-                    })
-                  }
-                  cellDataGetter={(params) =>
-                    params.rowData.id === editRow.id ? (
-                      <IconButton
-                        disableRipple
-                        onClick={() => {
-                          setEditRow({
-                            id: "editRow",
-                            ...newEditElement,
-                            tableMode: "REMOVE",
-                          })
-                          setAddElement(false)
-                        }}
-                      >
-                        <ClearIcon />
-                      </IconButton>
-                    ) : (
-                      isRemove && (
-                        <IconButton
-                          disableRipple
-                          onClick={() => {
-                            addElement && setAddElement(false)
-                            setEditRow({
-                              ...params.rowData,
-                              tableMode: "REMOVE",
-                            })
-                          }}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      )
-                    )
-                  }
-                  className={classes.flexContainer}
-                  disableSort
-                  cellRenderer={cellRenderer}
-                />
-              )}
-            </VTable>
-            {isPagination && (
-              <TablePagination
-                onPageChange={() => {}}
-                component="div"
-                count={100}
-                page={1}
-                onChangePage={() => {}}
-                rowsPerPage={10}
-                onChangeRowsPerPage={() => {}}
-                rowsPerPageOptions={[10, 50, { value: -1, label: "All" }]}
-              />
-            )}
-          </Paper>
+          />
+        ) : (
+          <span>Height = 0</span>
         )
       }}
     </AutoSizer>
   )
 }
+
+const TableComponent = memo((props: any) => {
+  const {
+    tableHeight,
+    width,
+    isPagination,
+    isAdd,
+    data,
+    setEditRow,
+    newEditElement,
+    setAddElement,
+    isCheck,
+    tableData,
+    checkedItems,
+    check,
+    setCheckedItems,
+    title,
+    exportFile,
+    exportFileName,
+    columns,
+    tableRef,
+    rowCache,
+    editRow,
+    classes,
+    setSortOption,
+    customHeaderHeight,
+    rowRenderer,
+    onRowClick,
+    //headerRowRenderer,
+    sortOption,
+    isDetail,
+    headerRenderer,
+    cellRenderer,
+    showActions,
+    addElement,
+    isEdit,
+    add,
+    edit,
+    remove,
+    isRemove,
+    setHeight,
+    height,
+  } = props
+
+  useEffect(() => {
+    setTimeout(() => {
+      const _height =
+        (Object.values(
+          (rowCache as any)["_rowHeightCache"],
+        ) as number[]).reduce((sum, el) => sum + el, 0) + customHeaderHeight
+      setHeight(_height > height ? height : _height)
+    }, 0)
+  }, [])
+
+  return (
+    <Paper
+      style={{
+        width,
+        height: tableHeight + 64 + (isPagination ? 52 : 0),
+      }}
+    >
+      <EnhancedTableToolbar
+        data={data}
+        {...(isAdd && {
+          isAdd: () => {
+            setEditRow({
+              id: "editRow",
+              ...newEditElement,
+              tableMode: "ADD",
+            })
+            setAddElement((prev: any) => !prev)
+          },
+        })}
+        {...(isCheck && { checkedItems, check, setCheckedItems })}
+        allRecord={tableData.length}
+        actions={props.actions!}
+        title={title}
+        numSelected={checkedItems.length}
+        exportFile={exportFile}
+        exportFileName={exportFileName}
+        columns={columns.map((el: any) => el.dataKey)}
+        rows={data.map((el: any) =>
+          Object.keys(el)
+            .filter((item) => item !== "id")
+            .map((element: any) => el[element]),
+        )}
+      />
+      <VTable
+        ref={tableRef}
+        height={tableHeight}
+        width={width}
+        rowHeight={rowCache.rowHeight}
+        gridStyle={{
+          direction: "inherit",
+        }}
+        {...(editRow.tableMode === "ADD" && { scrollToIndex: 0 })}
+        sort={(info) => {
+          setSortOption((prev: any) => {
+            if (!prev.sortDirection && !prev.sortBy) {
+              return { sortDirection: "ASC", sortBy: info.sortBy }
+            }
+            if (
+              prev.sortDirection === "ASC" &&
+              prev.sortBy &&
+              prev.sortBy === info.sortBy
+            ) {
+              return { sortDirection: "DESC", sortBy: info.sortBy }
+            }
+            if (
+              prev.sortDirection === "ASC" &&
+              prev.sortBy &&
+              prev.sortBy !== info.sortBy
+            ) {
+              return { sortDirection: "ASC", sortBy: info.sortBy }
+            }
+            if (
+              prev.sortDirection &&
+              prev.sortDirection !== info.sortDirection &&
+              prev.sortBy &&
+              prev.sortBy !== info.sortBy
+            ) {
+              return {
+                sortDirection: info.sortDirection,
+                sortBy: info.sortBy,
+              }
+            }
+            if (
+              prev.sortDirection === "DESC" &&
+              prev.sortBy &&
+              prev.sortBy !== info.sortBy
+            ) {
+              return { sortDirection: "DESC", sortBy: info.sortBy }
+            }
+            return { sortDirection: undefined, sortBy: undefined }
+          })
+        }}
+        rowCount={tableData.length}
+        rowGetter={({ index }) => tableData[index]}
+        headerHeight={customHeaderHeight}
+        className={classes.table}
+        rowRenderer={rowRenderer}
+        onRowClick={onRowClick}
+        //headerRowRenderer={headerRowRenderer}
+        sortDirection={sortOption.sortDirection}
+        deferredMeasurementCache={rowCache}
+      >
+        {isDetail && (
+          <Column
+            dataKey="detail"
+            width={38}
+            headerRenderer={(headerProps) =>
+              headerRenderer({
+                ...headerProps,
+                columnIndex: -2,
+              })
+            }
+            className={classes.flexContainer}
+            disableSort
+            cellRenderer={(cellProps) =>
+              cellRenderer({
+                ...cellProps,
+                isActionUsage: false,
+                colInd: "detail",
+              })
+            }
+          />
+        )}
+        {isCheck && (
+          <Column
+            dataKey="check"
+            cellDataGetter={(params) => {
+              const checked = checkedItems.includes(params.rowData.id)
+
+              return (
+                params.rowData.id !== "editRow" && (
+                  <Checkbox
+                    size="small"
+                    style={{ padding: 0 }}
+                    disableRipple
+                    color="default"
+                    checked={checked}
+                    onChange={() =>
+                      checked
+                        ? setCheckedItems((prev: any) =>
+                            prev.filter((el: any) => el !== params.rowData.id),
+                          )
+                        : setCheckedItems((prev: any) =>
+                            prev.concat(params.rowData.id),
+                          )
+                    }
+                  />
+                )
+              )
+            }}
+            width={42}
+            headerRenderer={(headerProps) =>
+              headerRenderer({
+                ...headerProps,
+                columnIndex: -1,
+              })
+            }
+            className={classes.flexContainer}
+            disableSort
+            cellRenderer={(cellProps) =>
+              cellRenderer({
+                ...cellProps,
+                isActionUsage: false,
+                colInd: "check",
+              })
+            }
+          />
+        )}
+        {columns.map(
+          (
+            { dataKey, editComponent, numeric, filterDataCell, ...other }: any,
+            index: number,
+            arr: any[],
+          ) => {
+            return (
+              <Column
+                key={dataKey}
+                headerRenderer={(headerProps) =>
+                  headerRenderer({
+                    ...headerProps,
+                    columnIndex: index,
+                  })
+                }
+                className={classes.flexContainer}
+                cellRenderer={(cellProps) =>
+                  cellRenderer({
+                    ...cellProps,
+                    editComponent,
+                    numeric,
+                    filterDataCell,
+                    isActionUsage: true,
+                    colInd: isDetail
+                      ? isCheck
+                        ? index + 2
+                        : index + 1
+                      : index,
+                    first: isDetail || isCheck ? false : index === 0,
+                    last: isEdit || isAdd ? false : arr.length - 1 === index,
+                  })
+                }
+                dataKey={dataKey}
+                width={width / arr.length}
+                {...other}
+              />
+            )
+          },
+        )}
+        {showActions && (
+          <Column
+            dataKey="edit"
+            width={35}
+            headerRenderer={(headerProps) =>
+              headerRenderer({
+                ...headerProps,
+                columnIndex: columns.length,
+              })
+            }
+            cellDataGetter={(params) =>
+              params.rowData.id === editRow.id ? (
+                <IconButton
+                  size="small"
+                  disableRipple
+                  onClick={() => {
+                    addElement && setAddElement(false)
+                    if (isAdd && editRow.tableMode === "ADD") {
+                      delete editRow.id
+                      delete editRow.tableMode
+                      add!(editRow)
+                    }
+                    if (isEdit && editRow.tableMode === "EDIT") {
+                      delete editRow.tableMode
+                      edit!(editRow)
+                    }
+                    if (isRemove && editRow.tableMode === "REMOVE") {
+                      delete editRow.tableMode
+                      remove!(editRow)
+                    }
+                    setEditRow({
+                      id: "editRow",
+                      ...newEditElement,
+                      tableMode: "EDIT",
+                    })
+                  }}
+                >
+                  <CheckIcon fontSize="small" />
+                </IconButton>
+              ) : (
+                isEdit && (
+                  <IconButton
+                    size="small"
+                    disableRipple
+                    onClick={() => {
+                      addElement && setAddElement(false)
+                      setEditRow({
+                        ...params.rowData,
+                        tableMode: "EDIT",
+                      })
+                    }}
+                  >
+                    <EditIcon fontSize="small" />
+                  </IconButton>
+                )
+              )
+            }
+            className={classes.flexContainer}
+            disableSort
+            cellRenderer={(cellProps) =>
+              cellRenderer({
+                ...cellProps,
+                isActionUsage: false,
+                colInd: isDetail
+                  ? isCheck
+                    ? columns.length + 2
+                    : columns.length + 1
+                  : columns.length,
+              })
+            }
+          />
+        )}
+        {showActions && (
+          <Column
+            dataKey="remove"
+            width={40}
+            headerRenderer={(headerProps) =>
+              headerRenderer({
+                ...headerProps,
+                columnIndex: columns.length + 1,
+              })
+            }
+            cellDataGetter={(params) =>
+              params.rowData.id === editRow.id ? (
+                <IconButton
+                  size="small"
+                  disableRipple
+                  onClick={() => {
+                    setEditRow({
+                      id: "editRow",
+                      ...newEditElement,
+                      tableMode: "REMOVE",
+                    })
+                    setAddElement(false)
+                  }}
+                >
+                  <ClearIcon fontSize="small" />
+                </IconButton>
+              ) : (
+                isRemove && (
+                  <IconButton
+                    size="small"
+                    disableRipple
+                    onClick={() => {
+                      addElement && setAddElement(false)
+                      setEditRow({
+                        ...params.rowData,
+                        tableMode: "REMOVE",
+                      })
+                    }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                )
+              )
+            }
+            className={classes.flexContainer}
+            disableSort
+            cellRenderer={(cellProps) =>
+              cellRenderer({
+                ...cellProps,
+                isActionUsage: false,
+                colInd: isDetail
+                  ? isCheck
+                    ? columns.length + 3
+                    : columns.length + 2
+                  : columns.length,
+              })
+            }
+          />
+        )}
+      </VTable>
+      {isPagination && (
+        <TablePagination
+          onPageChange={() => {}}
+          component="div"
+          count={100}
+          page={1}
+          onChangePage={() => {}}
+          rowsPerPage={10}
+          onChangeRowsPerPage={() => {}}
+          rowsPerPageOptions={[10, 50, { value: -1, label: "All" }]}
+        />
+      )}
+    </Paper>
+  )
+})
 
 const typedMemo: <T>(c: T) => T = memo
 export default typedMemo(MuiVirtualizedTable)

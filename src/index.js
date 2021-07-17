@@ -11,18 +11,30 @@ const testText =
 ReactDOM.render(
   <div
     style={{
-      maxHeight: "90vh",
-      width: "99vw",
+      height: "94vh",
+      width: "100vw",
       padding: 20,
       boxSizing: "border-box",
     }}
   >
     <Table
+      detailPanel={() => (
+        <div>
+          {testText}
+          {testText}
+        </div>
+      )}
+      remove={() => console.log("48")}
+      check={{
+        icon: () => <div>123</div>,
+        onClick: (checkedItems) => console.log(checkedItems),
+        tooltip: "test",
+      }}
       onRowClick={() => console.log("48")}
       add={() => console.log("48")}
-      edit={() => console.log("48")}
+      edit={(row) => console.log("48")}
       title="Test"
-      data={Array.from({ length: 30000 }).map((el, i) => ({
+      data={Array.from({ length: 3 }).map((el, i) => ({
         id: Math.random(),
         test1: someText,
         test2: someText,
