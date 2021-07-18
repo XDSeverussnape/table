@@ -571,9 +571,15 @@ function MuiVirtualizedTable<T extends unknown>(
         (sortOption.sortDirection.toLowerCase() as any),
     ],
   )
-  detailRows.forEach((id) => {
-    tableData.splice(id + 1, 0, { id: `detailRow-${id}` })
-  })
+  if (detailPanel) {
+    tableData = tableData.map((el: T) => ({
+      ...(el as any),
+      detail: detailPanel(el),
+    }))
+  }
+  // detailRows.forEach((id) => {
+  //   tableData.splice(id + 1, 0, { id: `detailRow-${id}` })
+  // })
 
   const [tableHeight, setHeight] = useState<number>(400)
 
@@ -619,7 +625,7 @@ function MuiVirtualizedTable<T extends unknown>(
             <div
               ref={measurerParams.registerChild as any}
               onLoad={measurerParams.measure}
-              {...(isActionUsage ||
+              {...(!isActionUsage ||
                 (rowData.id === editRow.id && {
                   onClick: (e) => e.stopPropagation(),
                 }))}
@@ -669,19 +675,26 @@ function MuiVirtualizedTable<T extends unknown>(
                   size="small"
                   disableRipple
                   onClick={() => {
-                    if (detailRows.includes(rowIndex)) {
+                    if (detailRows.includes(rowData.id)) {
+                      tableRef.current?.recomputeRowHeights()
+                      tableRef.current?.forceUpdateGrid()
+                      tableRef.current?.forceUpdate()
                       setDetailRows((prev) =>
-                        prev.filter((el) => el !== rowIndex),
+                        prev.filter((el) => el !== rowData.id),
                       )
                     } else {
-                      setDetailRows((prev) => prev.concat(rowIndex))
+                      tableRef.current?.recomputeRowHeights()
+                      tableRef.current?.forceUpdateGrid()
+                      tableRef.current?.forceUpdate()
+                      tableRef.current?.recomputeRowHeights()
+                      setDetailRows((prev) => prev.concat(rowData.id))
                     }
                   }}
                 >
                   <ChevronRightIcon
                     fontSize="small"
                     style={{
-                      transform: detailRows.includes(rowIndex)
+                      transform: detailRows.includes(rowData.id)
                         ? "rotate(90deg)"
                         : "rotate(0deg)",
                     }}
@@ -700,7 +713,7 @@ function MuiVirtualizedTable<T extends unknown>(
   const rowRenderer = (params: TableRowProps) => {
     const { detailPanel } = props
     const { onRowClick, rowData, index, className } = params
-
+    console.log(detailRows.includes(rowData.id), detailRows)
     return (
       <CellMeasurer
         cache={rowCache}
@@ -709,17 +722,7 @@ function MuiVirtualizedTable<T extends unknown>(
         parent={rowParent as any}
         rowIndex={params.index}
       >
-        {String(rowData.id).startsWith("detailRow-") ? (
-          <div
-            style={{
-              ...params.style,
-              borderBottom: "1px solid rgba(224, 224, 224, 1)",
-              height: "max-content",
-            }}
-          >
-            {detailPanel!(tableData.find((el: T, i: number) => i === index))}
-          </div>
-        ) : (
+        <>
           <div
             onClick={(event: React.MouseEvent<HTMLTableRowElement>) => {
               if (params.onRowClick) {
@@ -746,106 +749,119 @@ function MuiVirtualizedTable<T extends unknown>(
           >
             {params.columns}
           </div>
-        )}
+          <div
+            style={{
+              ...params.style,
+              top: params.style.top + 45,
+              display: detailRows.includes(rowData.id)
+                ? "inline-block"
+                : "none",
+              borderBottom: "1px solid rgba(224, 224, 224, 1)",
+              height: "max-content",
+            }}
+          >
+            {rowData.detail}
+          </div>
+        </>
       </CellMeasurer>
     )
   }
 
-  // const headerRowRenderer = (params: TableHeaderRowProps) => {
-  //   const { columns, headerHeight } = props
-  //   const handleChange = debounce(
-  //     (value, index) =>
-  //       setFilters((prev) => prev.map((_, i) => (i === index ? value : _))),
-  //     500,
-  //   )
-  //   const actionColumn: ColumnData = { dataKey: "", label: "" }
-  //   let allColumns = [...columns]
-  //   if (props.check) allColumns = [actionColumn, ...allColumns]
-  //   if (props.add) allColumns = [...allColumns, actionColumn]
-  //   if (props.edit) allColumns = [...allColumns, actionColumn]
+  const headerRowRenderer = (params: TableHeaderRowProps) => {
+    const { columns, headerHeight } = props
+    const handleChange = debounce(
+      (value, index) =>
+        setFilters((prev) => prev.map((_, i) => (i === index ? value : _))),
+      500,
+    )
+    const actionColumn: ColumnData = { dataKey: "", label: "" }
+    let allColumns = [...columns]
+    if (props.check) allColumns = [actionColumn, ...allColumns]
+    if (props.add) allColumns = [...allColumns, actionColumn]
+    if (props.edit) allColumns = [...allColumns, actionColumn]
 
-  //   return (
-  //     <>
-  //       {isFilterable && (
-  //         <TableRow
-  //           className={clsx(params.className, classes.headerRow)}
-  //           style={{ ...params.style, display: "flex", height: 44 }}
-  //           component="div"
-  //         >
-  //           {params.columns.map((_: any, i) => {
-  //             const index =
-  //               props.check && props.detailPanel
-  //                 ? i - 2
-  //                 : props.detailPanel
-  //                 ? i - 1
-  //                 : props.check
-  //                 ? i - 1
-  //                 : i
+    return (
+      <>
+        {isFilterable && (
+          <TableRow
+            className={clsx(params.className, classes.headerRow)}
+            style={{ ...params.style, display: "flex", height: 44 }}
+            component="div"
+          >
+            {params.columns.map((_: any, i) => {
+              const index =
+                props.check && props.detailPanel
+                  ? i - 2
+                  : props.detailPanel
+                  ? i - 1
+                  : props.check
+                  ? i - 1
+                  : i
 
-  //             return (
-  //               <TableCell
-  //                 key={i}
-  //                 component="div"
-  //                 onClick={(e) => e.stopPropagation()}
-  //                 className={clsx(
-  //                   classes.tableCell,
-  //                   classes.flexContainer,
-  //                   classes.noClick,
-  //                   {
-  //                     [classes.firstCellElement]: index === 0,
-  //                     [classes.lastCellElement]: i === allColumns.length - 1,
-  //                   },
-  //                 )}
-  //                 variant="head"
-  //                 style={{
-  //                   ..._.props.style,
-  //                   height: 44,
-  //                   borderBottom: "none",
-  //                   padding: "0px 5px",
-  //                 }}
-  //                 align={
-  //                   allColumns[index]
-  //                     ? index !== 0
-  //                       ? "right"
-  //                       : "left"
-  //                     : "center"
-  //                 }
-  //               >
-  //                 {columns[index] && columns[index].isFilterable && (
-  //                   <TextField
-  //                     style={{ padding: 0 }}
-  //                     defaultValue={filters[i]}
-  //                     onChange={(e) => handleChange(e.target.value, index)}
-  //                     InputProps={{
-  //                       endAdornment: (
-  //                         <InputAdornment position="end">
-  //                           <FilterListIcon fontSize="small" />
-  //                         </InputAdornment>
-  //                       ),
-  //                     }}
-  //                     fullWidth
-  //                   />
-  //                 )}
-  //               </TableCell>
-  //             )
-  //           })}
-  //         </TableRow>
-  //       )}
-  //       <TableRow
-  //         className={clsx(params.className, classes.headerRow)}
-  //         style={{
-  //           ...params.style,
-  //           width: "auto",
-  //           display: "flex",
-  //           height: headerHeight ? headerHeight : 44,
-  //         }}
-  //         component="div"
-  //       >
-  //         {params.columns}
-  //       </TableRow>
-  //     </>
-  //   )
-  // }
+              return (
+                <TableCell
+                  key={i}
+                  component="div"
+                  onClick={(e) => e.stopPropagation()}
+                  className={clsx(
+                    classes.tableCell,
+                    classes.flexContainer,
+                    classes.noClick,
+                    {
+                      [classes.firstCellElement]: index === 0,
+                      [classes.lastCellElement]: i === allColumns.length - 1,
+                    },
+                  )}
+                  variant="head"
+                  style={{
+                    ..._.props.style,
+                    height: 44,
+                    borderBottom: "none",
+                    padding: "0px 5px",
+                  }}
+                  align={
+                    allColumns[index]
+                      ? index !== 0
+                        ? "right"
+                        : "left"
+                      : "center"
+                  }
+                >
+                  {columns[index] && columns[index].isFilterable && (
+                    <TextField
+                      style={{ padding: 0 }}
+                      defaultValue={filters[i]}
+                      onChange={(e) => handleChange(e.target.value, index)}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <FilterListIcon fontSize="small" />
+                          </InputAdornment>
+                        ),
+                      }}
+                      fullWidth
+                    />
+                  )}
+                </TableCell>
+              )
+            })}
+          </TableRow>
+        )}
+        <TableRow
+          className={clsx(params.className, classes.headerRow)}
+          style={{
+            ...params.style,
+            width: "auto",
+            display: "flex",
+            height: headerHeight ? headerHeight : 44,
+          }}
+          component="div"
+        >
+          {params.columns}
+        </TableRow>
+      </>
+    )
+  }
 
   const headerRenderer = (
     params: TableHeaderProps & {
@@ -868,13 +884,16 @@ function MuiVirtualizedTable<T extends unknown>(
             [classes.lastCellElement]: last,
           },
         )}
-        style={{ height: headerHeight ? headerHeight : 44 }}
+        style={{
+          height: headerHeight ? headerHeight : 44,
+          ...(dataKey === "check" && { justifyContent: "center" }),
+        }}
       >
         <div
           style={{
             width: "100%",
             display: "flex",
-            justifyContent: dataKey === "check" ? "center" : "space-between",
+            justifyContent: "space-between",
             flexDirection: columnIndex === 0 ? "row-reverse" : "row",
           }}
         >
@@ -964,7 +983,7 @@ function MuiVirtualizedTable<T extends unknown>(
               customHeaderHeight,
               rowRenderer,
               onRowClick,
-              //headerRowRenderer,
+              headerRowRenderer,
               sortOption,
               isDetail,
               headerRenderer,
@@ -1015,7 +1034,7 @@ const TableComponent = memo((props: any) => {
     customHeaderHeight,
     rowRenderer,
     onRowClick,
-    //headerRowRenderer,
+    headerRowRenderer,
     sortOption,
     isDetail,
     headerRenderer,
@@ -1129,7 +1148,7 @@ const TableComponent = memo((props: any) => {
         className={classes.table}
         rowRenderer={rowRenderer}
         onRowClick={onRowClick}
-        //headerRowRenderer={headerRowRenderer}
+        headerRowRenderer={headerRowRenderer}
         sortDirection={sortOption.sortDirection}
         deferredMeasurementCache={rowCache}
       >

@@ -18,6 +18,7 @@ ReactDOM.render(
     }}
   >
     <Table
+      headerHeight={100}
       detailPanel={() => (
         <div>
           {testText}
@@ -46,14 +47,14 @@ ReactDOM.render(
         test8: someText,
       }))}
       columns={[
-        { label: "test1", dataKey: "test1" },
-        { label: "test2", dataKey: "test2" },
-        { label: "test3", dataKey: "test3" },
-        { label: "test4", dataKey: "test4" },
-        { label: "test5", dataKey: "test5" },
+        { label: "test1", dataKey: "test1", isFilterable: true },
+        { label: "test2", dataKey: "test2", isFilterable: true },
+        { label: "test3", dataKey: "test3", isFilterable: true },
+        { label: "test4", dataKey: "test4", isFilterable: true },
+        { label: "test5", dataKey: "test5", isFilterable: true },
         { label: "test6", dataKey: "test6" },
-        { label: "test7", dataKey: "test7" },
-        { label: "test8", dataKey: "test8" },
+        { label: "test7", dataKey: "test7", isFilterable: true },
+        { label: "test8", dataKey: "test8", isFilterable: true },
       ]}
     />
   </div>,
